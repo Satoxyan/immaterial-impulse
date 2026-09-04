@@ -13,7 +13,7 @@ import Quickshell.Io
 
 Item {
     id: root
-    property real padding: 4
+    property real padding: Appearance.spacing.space50
 
     property var inputField: tagInputField
     readonly property var responses: Booru.responses
@@ -193,7 +193,7 @@ Item {
                 id: booruResponseListView
                 z: 0
                 anchors.fill: parent
-                spacing: 10
+                spacing: Appearance.spacing.space150
                 
                 touchpadScrollFactor: Config.options.interactions.scrolling.touchpadScrollFactor * 1.4
                 mouseScrollFactor: Config.options.interactions.scrolling.mouseScrollFactor * 1.4
@@ -221,18 +221,6 @@ Item {
                     nsfwPath: root.nsfwPath
                 }
 
-                footer: Item {
-                    property bool isLoading: !root.pullLoading && Booru.runningRequests > 0 && root.responses.length > 0
-                    width: booruResponseListView.width
-                    implicitHeight: isLoading ? footerIndicator.implicitHeight + 20 : 0
-                    MaterialLoadingIndicator {
-                        id: footerIndicator
-                        anchors.centerIn: parent
-                        loading: parent.isLoading
-                        visible: parent.isLoading
-                    }
-                }
-
                 onDragEnded: { // Pull to load more
                     const gap = booruResponseListView.verticalOvershoot
                     if (gap > root.pullLoadingGap) {
@@ -245,18 +233,11 @@ Item {
             PagePlaceholder {
                 id: placeholderItem
                 z: 2
-                shown: root.responses.length === 0 && Booru.runningRequests === 0
+                shown: root.responses.length === 0
                 icon: "bookmark_heart"
                 title: Translation.tr("Anime boorus")
                 description: ""
                 shape: MaterialShape.Shape.Bun
-            }
-
-            MaterialLoadingIndicator {
-                z: 3
-                anchors.centerIn: parent
-                visible: root.responses.length === 0 && Booru.runningRequests > 0
-                loading: true
             }
 
             ScrollToBottomButton {
@@ -270,10 +251,10 @@ Item {
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     bottom: parent.bottom
-                    bottomMargin: 20 + (root.pullLoading ? 0 : Math.max(0, (root.normalizedPullDistance - 0.5) * 50))
+                    bottomMargin: Appearance.spacing.space250 + (root.pullLoading ? 0 : Math.max(0, (root.normalizedPullDistance - 0.5) * 50))
                     Behavior on bottomMargin {
                         NumberAnimation {
-                            duration: 200
+                            duration: Appearance.animation.elementMoveFast.duration
                             easing.type: Easing.BezierSpline
                             easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
                         }
@@ -295,7 +276,7 @@ Item {
             visible: root.suggestionList.length > 0 && tagInputField.text.length > 0
             property int selectedIndex: 0
             Layout.fillWidth: true
-            spacing: 5
+            spacing: Appearance.spacing.space100
 
             Repeater {
                 id: tagSuggestionRepeater
@@ -305,17 +286,15 @@ Item {
                 }
                 delegate: ApiCommandButton {
                     id: tagButton
-                    colBackground: tagSuggestions.selectedIndex === index ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
-                    colBackgroundHover: tagSuggestions.selectedIndex === index ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
-                    colBackgroundActive: tagSuggestions.selectedIndex === index ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
+                    colBackground: tagSuggestions.selectedIndex === index ? Appearance.colors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainer
                     bounce: false
                     contentItem: RowLayout {
                         anchors.centerIn: parent
-                        spacing: 5
+                        spacing: Appearance.spacing.space100
                         StyledText {
                             Layout.fillWidth: false
                             font.pixelSize: Appearance.font.pixelSize.small
-                            color: tagSuggestions.selectedIndex === index ? Appearance.colors.colSecondaryContainer : Appearance.colors.colOnSecondaryContainer
+                            color: Appearance.colors.colOnSecondaryContainer
                             horizontalAlignment: Text.AlignRight
                             text: modelData.displayName ?? modelData.name
                         }
@@ -323,7 +302,7 @@ Item {
                             Layout.fillWidth: false
                             visible: modelData.count !== undefined
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: tagSuggestions.selectedIndex === index ? Appearance.colors.colSecondaryContainer : Appearance.colors.colOnSecondaryContainer
+                            color: Appearance.colors.colOnSecondaryContainer
                             horizontalAlignment: Text.AlignLeft
                             text: modelData.count ?? ""
                         }
@@ -351,8 +330,6 @@ Item {
                 tagInputField.text = updatedText;
                 tagInputField.cursorPosition = tagInputField.text.length;
                 tagInputField.forceActiveFocus();
-                tagInputField.searchTimer.stop();
-                root.suggestionList = [];
             }
 
             function acceptSelectedTag() {
@@ -365,7 +342,7 @@ Item {
 
         Rectangle { // Tag input area
             id: tagInputContainer
-            property real columnSpacing: 5
+            property real columnSpacing: Appearance.spacing.space50
             Layout.fillWidth: true
             radius: Appearance.rounding.normal - root.padding
             color: Appearance.colors.colLayer2
@@ -383,14 +360,14 @@ Item {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.topMargin: 5
+                anchors.topMargin: Appearance.spacing.space100
                 spacing: 0
 
                 StyledTextArea { // The actual TextArea
                     id: tagInputField
                     wrapMode: TextArea.Wrap
                     Layout.fillWidth: true
-                    padding: 10
+                    padding: Appearance.spacing.space150
                     color: activeFocus ? Appearance.m3colors.m3onSurface : Appearance.m3colors.m3onSurfaceVariant
                     renderType: Text.NativeRendering
                     placeholderText: Translation.tr('Enter tags, or "%1" for commands').arg(root.commandPrefix)
@@ -471,11 +448,7 @@ Item {
                                 // Insert newline
                                 tagInputField.insert(tagInputField.cursorPosition, "\n")
                                 event.accepted = true
-                            } else if (tagSuggestions.visible && tagSuggestions.selectedIndex >= 0) {
-                                // Accept selected suggestion instead of submitting
-                                tagSuggestions.acceptSelectedTag();
-                                event.accepted = true
-                            } else { // Accept text (search)
+                            } else { // Accept text
                                 const inputText = tagInputField.text
                                 root.handleInput(inputText)
                                 tagInputField.clear()
@@ -488,7 +461,7 @@ Item {
                 RippleButton { // Send button
                     id: sendButton
                     Layout.alignment: Qt.AlignTop
-                    Layout.rightMargin: 5
+                    Layout.rightMargin: Appearance.spacing.space100
                     implicitWidth: 40
                     implicitHeight: 40
                     buttonRadius: Appearance.rounding.small
@@ -506,6 +479,7 @@ Item {
                     }
 
                     contentItem: MaterialSymbol {
+                        verticalAlignment: Text.AlignVCenter
                         anchors.centerIn: parent
                         horizontalAlignment: Text.AlignHCenter
                         iconSize: 22
@@ -520,51 +494,51 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 5
-                anchors.leftMargin: 5
-                anchors.rightMargin: 5
-                spacing: 5
+                anchors.bottomMargin: Appearance.spacing.space100
+                anchors.leftMargin: Appearance.spacing.space100
+                anchors.rightMargin: Appearance.spacing.space100
+                spacing: Appearance.spacing.space100
 
                 property var commandsShown: [
+                    {
+                        name: "mode",
+                        sendDirectly: false,
+                    },
                     {
                         name: "clear",
                         sendDirectly: true,
                     }, 
                 ]
 
-                RippleButton {
-                    id: providerIndicator
-                    implicitWidth: rowLayout.implicitWidth + 4 * 2
-                    implicitHeight: rowLayout.implicitHeight + 4 * 2
-                    buttonRadius: Appearance.rounding.small
-
-                    RowLayout {
-                        id: rowLayout
-                        anchors.centerIn: parent
-
-                        MaterialSymbol {
-                            text: "api"
-                            iconSize: Appearance.font.pixelSize.normal
-                        }
-                        StyledText {
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.m3colors.m3onSurface
-                            elide: Text.ElideRight
-                            text: Booru.providers[Booru.currentProvider].name
-                            animateChange: true
-                        }
+                StyledComboBox { // The provider menu - same grammar as the AI model picker
+                    id: providerPicker
+                    Layout.fillWidth: false
+                    Layout.preferredWidth: Math.min(implicitWidth, 170)
+                    Layout.minimumWidth: 0
+                    implicitHeight: 28
+                    popupWidth: 220
+                    buttonIcon: "api"
+                    textRole: "name"
+                    colBackground: "transparent"
+                    colBackgroundHover: Appearance.colors.colLayer2Hover
+                    colBackgroundActive: Appearance.colors.colLayer2Active
+                    model: Booru.providerList.map(provider => ({
+                        name: Booru.providers[provider].name, value: provider }))
+                    currentIndex: Booru.providerList.indexOf(Booru.currentProvider)
+                    displayText: providerPicker.currentIndex < 0
+                        ? Translation.tr("Provider")
+                        : (providerPicker.model[providerPicker.currentIndex]?.name ?? "")
+                    onActivated: index => {
+                        const chosen = providerPicker.model[index];
+                        if (chosen) Booru.setProvider(chosen.value);
                     }
-
-                    StyledToolTip {
-                        text: Translation.tr("Current API endpoint: %1\nClick to switch with %2mode PROVIDER")
-                            .arg(Booru.providers[Booru.currentProvider].url)
-                            .arg(root.commandPrefix)
-                    }
-
-                    onClicked: {
-                        tagInputField.text = root.commandPrefix + "mode "
-                        tagInputField.cursorPosition = tagInputField.text.length
-                        tagInputField.forceActiveFocus()
+                    // A pick writes currentIndex and destroys the binding;
+                    // the /mode command path resyncs it here.
+                    Connections {
+                        target: Booru
+                        function onCurrentProviderChanged() {
+                            providerPicker.currentIndex = Booru.providerList.indexOf(Booru.currentProvider);
+                        }
                     }
                 }
 
@@ -619,18 +593,22 @@ Item {
 
                     hoverEnabled: true
                     PointingHandInteraction {}
+                    // The switch is disabled on zerochan but this area is not,
+                    // so it carries the same gate rather than relying on a
+                    // handler that would have run after the visual moved.
                     onPressed: {
-                        nsfwSwitch.checked = !nsfwSwitch.checked
+                        if (Booru.currentProvider === "zerochan") return;
+                        Persistent.states.booru.allowNsfw = !Persistent.states.booru.allowNsfw;
                     }
 
                     RowLayout {
                         id: switchesRow
-                        spacing: 5
+                        spacing: Appearance.spacing.space100
                         anchors.centerIn: parent
 
                         StyledText {
                             Layout.fillHeight: true
-                            Layout.leftMargin: 10
+                            Layout.leftMargin: Appearance.spacing.space150
                             Layout.alignment: Qt.AlignVCenter
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             color: nsfwSwitch.enabled ? Appearance.colors.colOnLayer1 : Appearance.m3colors.m3outline
@@ -642,10 +620,11 @@ Item {
                             scale: 0.6
                             Layout.alignment: Qt.AlignVCenter
                             checked: Persistent.states.booru.allowNsfw
-                            onCheckedChanged: {
-                                if (!nsfwSwitch.enabled) return;
-                                Persistent.states.booru.allowNsfw = checked;
-                            }
+                            // Same rule as ConfigSwitch: `checked` is a binding
+                            // on the stored value and only follows it. A Switch
+                            // moving its own `checked` would destroy that.
+                            checkable: false
+                            onClicked: Persistent.states.booru.allowNsfw = !Persistent.states.booru.allowNsfw
                         }
                     }
 
@@ -664,7 +643,13 @@ Item {
                             colBackground: Appearance.colors.colLayer2
 
                             downAction: () => {
-                                root.handleInput(commandRepresentation)
+                                if (modelData.sendDirectly) {
+                                    root.handleInput(commandRepresentation)
+                                } else {
+                                    tagInputField.text = commandRepresentation + " "
+                                    tagInputField.cursorPosition = tagInputField.text.length
+                                    tagInputField.forceActiveFocus()
+                                }
                                 if (modelData.name === "clear") {
                                     tagInputField.text = ""
                                 }
