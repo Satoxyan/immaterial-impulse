@@ -275,6 +275,8 @@ Item {
                             root.draggingFromWorkspace = -1
                             if (targetWorkspace !== -1 && targetWorkspace !== windowData?.workspace.id) {
                                 Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWorkspace}, follow = false, window = "address:${window.windowData?.address}" })`)
+                                window.x = Qt.binding(() => window.initX)
+                                window.y = Qt.binding(() => window.initY)
                             }
                             else {
                                 if (!window.windowData.floating) {
@@ -283,7 +285,14 @@ Item {
                                 }
                                 const percentageX = (window.x - xOffset) / root.workspaceImplicitWidth
                                 const percentageY = (window.y - yOffset) / root.workspaceImplicitHeight
-                                Hyprland.dispatch(`hl.dsp.window.move({ x = "${percentageX * root.screen.width}", y = "${percentageY * root.screen.height}", window = "address:${window.windowData?.address}" })`)
+                                const monitor = window.monitor
+                                const reserved = monitor?.reserved ?? [0, 0, 0, 0]
+                                const scaleF = monitor?.scale ?? 1
+                                const mw = monitor?.width ?? root.screen.width
+                                const mh = monitor?.height ?? root.screen.height
+                                const targetX = (monitor?.x ?? 0) + reserved[0] + (percentageX * (mw - reserved[0] - reserved[2])) / scaleF
+                                const targetY = (monitor?.y ?? 0) + reserved[1] + (percentageY * (mh - reserved[1] - reserved[3])) / scaleF
+                                Hyprland.dispatch(`hl.dsp.window.move({ x = "${targetX}", y = "${targetY}", window = "address:${window.windowData?.address}" })`)
                             }
                         }
                         onClicked: (event) => {
