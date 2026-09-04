@@ -37,6 +37,13 @@ MouseArea {
     readonly property bool requirePasswordToPower: Config.options.lock.security.requirePasswordToPower
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
 
+    // Scroll cycles the centered wallpaper shape (up = next, down = previous),
+    // same cooldown as the desktop so fast scrolling can't skip shapes.
+    Timer {
+        id: shapeCycleCooldown
+        interval: 400
+    }
+
     property var    artUrl:      MediaArt.resolve(activePlayer?.trackArtUrl ?? "", activePlayer?.metadata)
 
     // ---- the islands' contents, as data --------------------------------
@@ -204,6 +211,16 @@ MouseArea {
         forceFieldFocus();
         toolbarScale = 1;
         toolbarOpacity = 1;
+    }
+
+    // Scroll cycles the centered wallpaper shape
+    onWheel: (wheel) => {
+        if (!root.interactive) return;
+        if (shapeCycleCooldown.running) return
+        root.forceFieldFocus()
+        GlobalStates.cycleCenteredWallpaperShape(wheel.angleDelta.y > 0 ? 1 : -1)
+        shapeCycleCooldown.restart()
+        wheel.accepted = true
     }
 
     // Key presses
