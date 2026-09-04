@@ -1581,6 +1581,7 @@ Singleton {
                 property bool mediaPlayer: false
                 property string bannerImage: ""
                 property bool keepRightSidebarLoaded: true
+                property list<string> panelOrder: ["quickToggles", "sliders", "media"]
                 property JsonObject translator: JsonObject {
                     property bool enable: false
                     property int delay: 300 // Delay before sending request. Reduces (potential) rate limits and lag.
@@ -1737,7 +1738,6 @@ Singleton {
                 property int columns: 4
                 property bool closeAfterSelection: true
                 property int changeInterval: 0 
-<<<<<<< ours
                 property JsonObject wallpaperEngine: JsonObject {
                     property string libraryPath: ""
                     property string activeProject: ""
@@ -1784,7 +1784,6 @@ Singleton {
                     // is a place the user names once instead.
                     property string audioMonitor: ""
                 }
-=======
                 property string wallhavenApiKey: "" // fallback; keyring ("/wallhaven <key>") takes precedence
                 property string wallhavenCategories: "111"
                 property string wallhavenPurity: "100"
@@ -1793,7 +1792,6 @@ Singleton {
                 property string wallhavenRatios: ""
                 property string wallhavenColors: ""
                 property string wallhavenQuery: ""
->>>>>>> theirs
             }
 
             property JsonObject windows: JsonObject {

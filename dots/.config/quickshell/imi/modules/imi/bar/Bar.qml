@@ -55,24 +55,6 @@ Scope {
                         }
                     }
                 }
-
-                property bool showCorners: !Config.options.bar.autoHide.enable || mustShow
-
-                Timer {
-                    id: cornerRevealTimer
-                    interval: 65
-                    onTriggered: barRoot.showCorners = true
-                }
-
-                onMustShowChanged: {
-                    if (!Config.options.bar.autoHide.enable) return;
-                    if (mustShow) {
-                        cornerRevealTimer.restart()
-                    } else {
-                        cornerRevealTimer.stop()
-                        barRoot.showCorners = false
-                    }
-                }
                 property bool superShow: false
                 // Stay shown while a bar popup is open so it isn't orphaned above
                 // a hidden bar; the popup closes itself on pointer-leave, then the
@@ -88,6 +70,21 @@ Scope {
                 property bool mustShow: hoverRegion.containsMouse || superShow
                     || GlobalStates.editMode
                     || ((GlobalStates.mediaControlsOpen || GlobalStates.sysTrayOverflowOpen) && Config?.options.bar.autoHide.dismissPopups)
+                property bool showCorners: !Config.options.bar.autoHide.enable || mustShow
+                Timer {
+                    id: cornerRevealTimer
+                    interval: 65
+                    onTriggered: barRoot.showCorners = true
+                }
+                onMustShowChanged: {
+                    if (!Config.options.bar.autoHide.enable) return;
+                    if (mustShow) {
+                        cornerRevealTimer.restart()
+                    } else {
+                        cornerRevealTimer.stop()
+                        barRoot.showCorners = false
+                    }
+                }
                 property var thisMonitorData: HyprlandData.monitors.find(m => m.name === barRoot.screen?.name)
                 property bool monitorHasFullscreen: HyprlandData.workspaceById[thisMonitorData?.activeWorkspace?.id]?.hasfullscreen ?? false
                 property bool monitorHasSpecialOpen: (thisMonitorData?.specialWorkspace?.name ?? "") !== ""
@@ -319,11 +316,7 @@ Scope {
 
                     RoundCorner {
                         id: leftPillCorner
-<<<<<<< ours
-                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0
-=======
-                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0 && barRoot.showCorners
->>>>>>> theirs
+visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0 && barRoot.showCorners
                         x: barContent.centerPillX - implicitSize
                         implicitSize: Appearance.rounding.screenRounding
                         color: Appearance.colors.colBarBackground
@@ -393,11 +386,7 @@ Scope {
 
                     RoundCorner {
                         id: rightPillCorner
-<<<<<<< ours
-                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0
-=======
-                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0 && barRoot.showCorners
->>>>>>> theirs
+visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0 && barRoot.showCorners
                         x: barContent.centerPillX + barContent.centerPillWidth
                         implicitSize: Appearance.rounding.screenRounding
                         color: Appearance.colors.colBarBackground
