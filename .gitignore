@@ -2,6 +2,7 @@
 /cache
 # Ignore Python cache files
 __pycache__/
+<<<<<<< ours
 *.py[cod]
 /dots/.config/quickshell/imi/.qmlls.ini
 # exp-update
@@ -12,3 +13,7 @@ __pycache__/
 *~
 # nix build leaves a result symlink at the root
 /result
+=======
+*.pyc
+sync-repo-to-live.sh
+>>>>>>> theirs
