@@ -1154,7 +1154,7 @@ Variants {
                 // of the wallpaper forever, and any shader the machine's GL
                 // profile could not build left the desktop empty until the
                 // next switch (issue #70).
-                visible: !bgRoot.weShown && !blurLoader.active && !bgRoot.centeredHidesFullWallpaper && !bgRoot.videoRevealed
+                visible: !bgRoot.weShown && !blurLoader.active && !bgRoot.videoRevealed
                 onStatusChanged: {
                     if (status === Image.Ready && bgRoot.transitionProgress === 0.0) {
                         transitionAnim.restart()
