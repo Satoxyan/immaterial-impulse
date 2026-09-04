@@ -1154,7 +1154,7 @@ Variants {
                 // of the wallpaper forever, and any shader the machine's GL
                 // profile could not build left the desktop empty until the
                 // next switch (issue #70).
-                visible: !bgRoot.weShown && !blurLoader.active && !bgRoot.centeredWallpaperEnabled && !bgRoot.videoRevealed
+                visible: !bgRoot.weShown && !blurLoader.active && !bgRoot.centeredHidesFullWallpaper && !bgRoot.videoRevealed
                 onStatusChanged: {
                     if (status === Image.Ready && bgRoot.transitionProgress === 0.0) {
                         transitionAnim.restart()
@@ -1178,7 +1178,7 @@ Variants {
                 // drops with the same binding, it would sample the images at
                 // their natural size and stretch them to the screen rather than
                 // PreserveAspectCrop.
-                visible: !bgRoot.weShown && !blurLoader.active && bgRoot.wallpaperAnimation !== "" && !bgRoot.centeredWallpaperEnabled && !bgRoot.videoRevealed && !bgRoot.transitionShaderBroken && bgRoot.transitionProgress < 1
+                visible: !bgRoot.weShown && !blurLoader.active && bgRoot.wallpaperAnimation !== "" && !bgRoot.centeredShapeActive && !bgRoot.videoRevealed && !bgRoot.transitionShaderBroken && bgRoot.transitionProgress < 1
                 property var fromImage: previousWallpaper
                 property var toImage: wallpaper
                 property real progress: bgRoot.transitionProgress
@@ -1257,12 +1257,14 @@ Variants {
 
             Loader {
                 id: blurLoader
+                // The blur is invisible while the centered wallpaper is active
+                // (it would blur the shape's own background), so keep it off then.
                 // `lockLook` rather than screenLocked alone: Edit Mode's
                 // Lockscreen tab shows the lock's own blur inside the shrunk
                 // card, through this same loader - a child of the viewport, so
                 // it takes the edit transform with everything else in here.
                 readonly property bool lockLook: GlobalStates.lockLookActive
-                active: Config.options.lock.blur.enable && (blurLoader.lockLook || scaleAnim.running)
+                active: Config.options.lock.blur.enable && !bgRoot.centeredWallpaperEnabled && (blurLoader.lockLook || scaleAnim.running)
                 anchors.fill: parent
                 scale: blurLoader.lockLook ? Config.options.lock.blur.extraZoom : 1
                 Behavior on scale {
@@ -1288,7 +1290,7 @@ Variants {
                 id: centeredWallpaperBg
                 anchors.fill: parent
                 color: bgRoot.centeredWallpaperColor
-                opacity: bgRoot.centeredWallpaperEnabled ? 1 : 0
+                opacity: bgRoot.centeredBgOpacity()
                 visible: opacity > 0
 
                 Behavior on opacity {
