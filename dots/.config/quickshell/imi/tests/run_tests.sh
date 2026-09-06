@@ -1047,6 +1047,24 @@ if ! python3 "$SCRIPT_DIR/test_heap_janitor.py"; then
     exit 1
 fi
 
+# The installer's own tests (sdata/tests). They pin the install scripts, not
+# the shell, and until now nothing ran them: not this suite, not CI. They sit
+# outside the shell tree, so a deployed copy of this suite
+# (~/.config/quickshell/imi/tests) has no sdata beside it - skip there, fail
+# loudly anywhere the checkout is present.
+SDATA_TESTS="$SCRIPT_DIR/../../../../../sdata/tests"
+if [[ -d "$SDATA_TESTS" ]]; then
+    echo "Running installer (sdata) tests..."
+    for sdata_test in "$SDATA_TESTS"/test_*.py; do
+        if ! python3 "$sdata_test"; then
+            echo "Installer test $(basename "$sdata_test") failed."
+            exit 1
+        fi
+    done
+else
+    echo "Installer (sdata) tests skipped: no sdata/ beside this tree (deployed copy)."
+fi
+
 # Stage 8 of Edit Mode: the bar and the dock edited in place. What it pins is
 # silent on screen - a suspension that touches `visible` destroys a layer
 # surface, and an affordance wired into one bar orientation and not the other
