@@ -32,6 +32,12 @@ own repo; the installer pins which revision it builds.
   on a 5120x1440 screen. The frozen frame is now written as PPM (a tenth of
   the encode, a third of the decode); saved files, the clipboard, the
   annotator and the uploader still receive PNG.
+- **Snip buttons and clipboard history no longer launch a second shell.**
+  The bar's snip button, the Screen snip quick toggle, the recorder overlay
+  and the overview's image search each started another Quickshell process to
+  send one command back to the running shell, and every copy did the same
+  to refresh clipboard history. They now call in-process; the clipboard is
+  watched by the shell itself.
 
 ## [1.0.0-rc-14] — 2026-09-05
 
