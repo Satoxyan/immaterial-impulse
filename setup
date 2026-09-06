@@ -89,6 +89,9 @@ case ${SUBCMD_NAME} in
     fi
     if [[ "${SKIP_ALLFILES}" != true ]]; then
       source ${SUBCMD_DIR}/3.files.sh
+      # The files just deployed supersede whatever the QML disk cache holds
+      # for them; the stale entries (and old crash dumps) go now.
+      prune_shell_caches
     fi
     # Optional: build+install a WE-capable Quickshell (no-op unless INSTALL_WE=1).
     # Run (not sourced): it uses `exit 0` for its skip path, which must not
