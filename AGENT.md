@@ -1768,6 +1768,14 @@ Two non-obvious behaviors have bitten this codebase before and are worth knowing
   with a one-shot migration guarded by its own `migrated*` flag, as `migrateDeadParallaxSwitches`
   and `migrateSplitCheatsheetButtons` do. Motivated by 65bd7696a ("feat(cheatsheet): draw a chord as
   one keycap per key").
+- **Never spawn `qs` to call the shell's own IPC.** `Quickshell.execDetached(["qs", ..., "ipc",
+  "call", ...])` from inside the shell starts a second Quickshell - 77 ms of Qt start-up on a fast
+  machine and a fork of the shell's whole address space - to deliver one call back into the process
+  that spawned it; six buttons did this for the region selector and Hyprland's exec-once did it after
+  every clipboard store. In-process callers emit `GlobalStates.regionRequested(action)` (the selector
+  dispatches it a turn later so a caller's own surface has closed first); the clipboard is watched
+  by a resident `wl-paste --watch` in `Cliphist`. `IpcHandler`s and `GlobalShortcut`s remain for
+  callers outside the process. `lint_no_self_ipc_spawn.sh` pins it. b2a332f47 ("perf(region): request the selector in-process instead of spawning qs at ourselves").
 - **The region selector intentionally takes exclusive focus.** Dismissable panels normally close
   when `GlobalFocusGrab` is cleared, but the selector first sets
   `GlobalStates.settingsHeldForRegionSelector` so Settings can remain visible in screenshots without
