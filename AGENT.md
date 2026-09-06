@@ -3627,6 +3627,11 @@ arrays, etc.) rather than static declarations - e.g. the plugin system in
   trusting the process's output exists or is fresh; `rm -f`-ing the target path before launching the
   process (see `TempScreenshotProcess.qml`) turns a silent stale-reuse into an honest empty-file
   failure instead.
+  The same file is written as PPM, not PNG: the overlay cannot appear before grim finishes, and
+  grim's single-threaded level-6 PNG encode was ~570 ms at 5120x1440 against ~55 ms for PPM. magick
+  inherits the input container, so `ScreenshotAction` names `png:` on both crop outputs - drop that
+  and the clipboard, the annotator and the uploader get PPM; `lint_region_selector_capture.sh`
+  pins the pair. dd19a3e7f ("perf(region): write the frozen frame as PPM so the selector is not held behind a PNG encode").
 - **An overlay `Item` placed on top of an interactive control (e.g. a decorative `Flickable`-based
   mask drawn over a `TextField`/`TextArea`) will silently eat the clicks meant to focus that
   control**, unless the overlay is `enabled: false`. `ConfigTextArea`'s `password: true` mode draws
