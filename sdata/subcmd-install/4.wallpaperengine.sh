@@ -111,6 +111,32 @@ write_stamp(){ # $1 = installed ref, $2 = qs binary path, $3 = WE lib dir
   printf '%s %s %s\n' "$1" "$2" "${3:-}" > "$STAMP_FILE"
 }
 
+# Keep only the prebuilt tree the wrapper points at. Every try_prebuilt run
+# extracts its ~1.4 GB tarball into a fresh $PREBUILT_ROOT/<ref> and used to
+# leave every earlier <ref> behind, so a machine that followed the pin from
+# v0.2.0 to v0.3.0 carried 9.6 GB of dead renderers under ~/.cache. Only
+# direct children of $PREBUILT_ROOT are touched, and only when a ref to keep
+# is named; an unset root or an empty ref is a no-op, never a wipe.
+prune_prebuilt(){ # $1 = ref to keep
+  local keep="$1" d name
+  [[ -n "$keep" && -d "$PREBUILT_ROOT" ]] || return 0
+  for d in "$PREBUILT_ROOT"/*/; do
+    [[ -d "$d" ]] || continue
+    d="${d%/}"; name="${d##*/}"
+    [[ "$name" == "$keep" ]] && continue
+    rm -rf -- "$d" && say "pruned stale prebuilt $name"
+  done
+}
+
+# The source tree only exists because some earlier run fell back to a source
+# build. Once a prebuilt is installed the wrapper no longer points into it,
+# and a future fallback re-clones anyway (build-we.sh rebuilds from scratch),
+# so the ~5 GB checkout is dead weight.
+prune_build_dir(){
+  [[ -d "$BUILD_DIR/.git" ]] || return 0
+  rm -rf -- "$BUILD_DIR" && say "removed the stale source build tree"
+}
+
 up_to_date(){
   [[ "${WE_FORCE_REBUILD:-0}" == "1" ]] && return 1
   [[ -f "$STAMP_FILE" ]] || return 1
@@ -309,6 +335,8 @@ try_prebuilt(){
 
   install_wrapper "$qs_bin" "$lib"
   write_stamp "$WE_REF" "$qs_bin" "$lib"
+  prune_prebuilt "$WE_REF"
+  prune_build_dir
   say "installed prebuilt $WE_REF (skipped the ~compile)."
   return 0
 }
@@ -335,6 +363,7 @@ source_build(){
   [[ -x "$QS_BIN" ]] || { say "build finished but $QS_BIN missing. Aborting." >&2; exit 1; }
   install_wrapper "$QS_BIN" "$WE_LIB_DIR"
   write_stamp "$WE_REF" "$QS_BIN" "$WE_LIB_DIR"
+  prune_prebuilt "$WE_REF"
 }
 
 if up_to_date; then
@@ -350,6 +379,7 @@ if up_to_date; then
   say "already installed at $WE_REF; refreshing the wrapper and skipping the rebuild."
   install_wrapper "$_stamp_bin" "$_stamp_lib"
   write_stamp "$WE_REF" "$_stamp_bin" "$_stamp_lib"
+  prune_prebuilt "$WE_REF"
   exit 0
 fi
 if try_prebuilt; then exit 0; fi
