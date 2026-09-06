@@ -255,6 +255,16 @@ if ! bash "$SCRIPT_DIR/lint_region_selector_capture.sh"; then
     exit 1
 fi
 
+# The shell must not spawn a second Quickshell to reach its own IPC: six
+# buttons did `qs ... ipc call region ...` and Hyprland chained the same after
+# every clipboard store. lint_no_self_ipc_spawn.sh keeps them from coming
+# back.
+echo "Running no-self-IPC lint..."
+if ! bash "$SCRIPT_DIR/lint_no_self_ipc_spawn.sh"; then
+    echo "No-self-IPC lint failed."
+    exit 1
+fi
+
 # Static lint: spacing/padding/margin must use Appearance.spacing tokens, not
 # raw pixel literals in the token range.
 echo "Running Material icon lint..."
