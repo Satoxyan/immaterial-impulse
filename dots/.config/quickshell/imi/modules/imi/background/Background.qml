@@ -108,6 +108,8 @@ Variants {
         property real centeredShapeMax: Math.max(1, Math.ceil(
             Math.hypot(bgRoot.screen.width / 2, bgRoot.screen.height / 2)
             / bgRoot.centeredShapeMinBoundaryRadius(bgRoot.centeredWallpaperShape) * 1.02))
+        property real centeredShapeRenderSize: Math.max(1, Math.ceil(
+            Math.hypot(bgRoot.screen.width, bgRoot.screen.height)))
 
         // Smallest normalized distance from the polygon's center to its boundary
         // for each supported shape, precomputed by sampling the geometry.
@@ -173,8 +175,14 @@ Variants {
         // animation by direction. It also skips the animation while the config
         // is still loading, so the initial set never plays a grow-in on startup.
         function setCenteredProgress(value) {
-            if (!bgRoot.centeredWallpaperEnabled || !bgRoot.centeredAnimationReady || !Config.ready) {
+            if (!bgRoot.centeredWallpaperEnabled || !Config.ready) {
                 bgRoot.centeredProgress = value
+                return
+            }
+            if (!bgRoot.centeredAnimationReady) {
+                // first real set after config ready — direct, then arm animation for next lock/unlock
+                bgRoot.centeredProgress = value
+                bgRoot.centeredAnimationReady = true
                 return
             }
             if (value === bgRoot.centeredProgress) return
@@ -232,11 +240,13 @@ Variants {
             return bgRoot.centeredWallpaperSize
                 + bgRoot.centeredProgress * (bgRoot.centeredShapeMax - bgRoot.centeredWallpaperSize)
         }
-        // Zoom level of the wallpaper inside the shape. The shape item is fixed
-        // at centeredShapeMax and scaled down, so the picture inside must apply
-        // the inverse zoom to stay exactly as before on screen: it fills the
-        // shape (height == shape size) while the shape is smaller than the
+        // Zoom level of the wallpaper inside the shape. The shape item is
+        // rendered at a fixed size (centeredShapeRenderSize) and scaled, so the
+        // picture inside must apply the inverse zoom to stay exactly as before
+        // on screen: it fills the shape while the shape is smaller than the
         // screen, then stops growing once it would cover the whole screen.
+        // Scaling relative to the actual item size keeps the visible wallpaper
+        // framing identical regardless of the render size.
         // A small overscan (1.08) keeps the wallpaper's own edge behind the
         // shape tips during the click pulse (which grows the shape to 1.06x);
         // it eases out as the shape approaches full screen so the lock/unlock
@@ -247,7 +257,7 @@ Variants {
             const size = bgRoot.centeredShapeSize()
             const overscan = size >= minDim ? 1
                 : 1.08 - 0.08 * (size - bgRoot.centeredWallpaperSize) / (minDim - bgRoot.centeredWallpaperSize)
-            return overscan * bgRoot.centeredShapeMax
+            return overscan * bgRoot.centeredShapeRenderSize
                 / Math.max(size, minDim)
         }
         function centeredFullWallpaperOpacity() {
@@ -257,6 +267,7 @@ Variants {
         }
         function centeredBgOpacity() {
             if (!bgRoot.centeredWallpaperEnabled) return 0
+            if (bgRoot.wallpaperIsVideo) return 0
             return Math.max(0, Math.min(1, (1 - bgRoot.centeredProgress) / bgRoot.centeredFade))
         }
 
@@ -963,13 +974,6 @@ Variants {
             }
         }
 
-        Connections {
-            target: GlobalStates
-            function onCenteredWallpaperThumpRequested() {
-                centeredWallpaperShapeItem.thump()
-            }
-        }
-
         // The wallpaper layers, and the parallax viewport they live in. It is
         // deliberately NOT anchored: it is drawn larger than the screen and its
         // x/y ARE the effect (see parallaxOffsets). At zoom 1 it is exactly
@@ -1301,14 +1305,14 @@ Variants {
             MaterialShape {
                 id: centeredWallpaperShapeItem
                 anchors.centerIn: parent
-                width: bgRoot.centeredWallpaperSize
-                height: bgRoot.centeredWallpaperSize
-                color: bgRoot.centeredWallpaperColor
+                width: bgRoot.centeredShapeRenderSize
+                height: bgRoot.centeredShapeRenderSize
+                color: bgRoot.wallpaperIsVideo ? "transparent" : bgRoot.centeredWallpaperColor
                 shape: bgRoot.centeredWallpaperShape
                 transformOrigin: Item.Center
                 // Base scale (lock/unlock) multiplied by the click pulse.
                 property real shapeZoom: 1
-                scale: (bgRoot.centeredShapeSize() / bgRoot.centeredShapeMax) * shapeZoom
+                scale: (bgRoot.centeredShapeSize() / bgRoot.centeredShapeRenderSize) * shapeZoom
                 visible: bgRoot.centeredWallpaperEnabled
                     && (bgRoot.centeredProgress < 1 || bgRoot.centeredAnimating)
 
@@ -1324,45 +1328,21 @@ Variants {
                 SequentialAnimation {
                     id: imageFollowAnim
                     PauseAnimation { duration: 200 }
-                    NumberAnimation { target: centeredWallpaperContent; property: "scale"; to: 1.04; duration: 300; easing.type: Easing.OutQuad }
-                    NumberAnimation { target: centeredWallpaperContent; property: "scale"; to: 1.0;  duration: 500; easing.type: Easing.InOutQuad }
+                    NumberAnimation { target: centeredWallpaperImage; property: "imageZoom"; to: 1.08; duration: 250; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: centeredWallpaperImage; property: "imageZoom"; to: 1.0;  duration: 350; easing.type: Easing.InOutQuad }
                 }
                 function thump() {
                     if (shapeZoomAnim.running || imageFollowAnim.running) return
                     shapeZoomAnim.restart()
                     imageFollowAnim.restart()
-                    GlobalStates.centeredWallpaperThumpRequested()
                 }
 
-                state: bgRoot.centeredWallpaperEnabled ? "shown" : "hidden"
-
-                states: [
-                    State {
-                        name: "shown"
-                        PropertyChanges { target: centeredWallpaperShapeItem; scale: 1; opacity: 1 }
-                    },
-                    State {
-                        name: "hidden"
-                        PropertyChanges { target: centeredWallpaperShapeItem; scale: 1.4; opacity: 0 }
+                Connections {
+                    target: GlobalStates
+                    function onCenteredWallpaperThumpRequested() {
+                        centeredWallpaperShapeItem.thump()
                     }
-                ]
-
-                transitions: [
-                    Transition {
-                        to: "shown"
-                        ParallelAnimation {
-                            NumberAnimation { target: centeredWallpaperShapeItem; property: "scale"; from: 0; duration: Appearance.animation.elementMove.duration; easing.type: Easing.InOutCubic }
-                            NumberAnimation { target: centeredWallpaperShapeItem; property: "opacity"; duration: Appearance.animation.elementMove.duration; easing.type: Easing.InOutCubic }
-                        }
-                    },
-                    Transition {
-                        to: "hidden"
-                        ParallelAnimation {
-                            NumberAnimation { target: centeredWallpaperShapeItem; property: "scale"; duration: Appearance.animation.elementMove.duration; easing.type: Easing.InOutCubic }
-                            NumberAnimation { target: centeredWallpaperShapeItem; property: "opacity"; duration: Appearance.animation.elementMove.duration; easing.type: Easing.InOutCubic }
-                        }
-                    }
-                ]
+                }
 
                 layer.enabled: true
                 layer.effect: OpacityMask {
@@ -1373,20 +1353,57 @@ Variants {
                     }
                 }
 
-                // Live Wallpaper Engine content, centre-cropped into the shape.
-                // Samples the same surface the blur/lock shaders use, so no
-                // second WE renderer is spawned; only instantiated while the
-                // centred wallpaper is on AND a WE surface is actually drawing.
+                StyledImage {
+                    id: centeredWallpaperImage
+                    width: bgRoot.width
+                    height: bgRoot.height
+                    anchors.centerIn: parent
+                    visible: !bgRoot.wallpaperIsVideo && !bgRoot.weShown
+                    source: bgRoot.wallpaperPath
+                    fillMode: Image.PreserveAspectCrop
+                    cache: false
+                    mipmap: true
+                    antialiasing: true
+                    sourceSize.width: bgRoot.width
+                    sourceSize.height: bgRoot.height
+                    // Inverse lock/unlock zoom, multiplied by the delayed pulse.
+                    // Dividing by shapeZoom keeps the picture visually still while
+                    // the shape zooms, until imageZoom's follow-up kicks in.
+                    property real imageZoom: 1
+                    scale: bgRoot.centeredImageScale() * (1 / centeredWallpaperShapeItem.shapeZoom) * imageZoom
+                }
+
+                LiveWallpaperPreview {
+                    id: centeredLiveWallpaper
+                    width: bgRoot.width
+                    height: bgRoot.height
+                    anchors.centerIn: parent
+                    visible: bgRoot.wallpaperIsVideo
+                    source: bgRoot.effectiveWallpaperPath
+                    thumbnail: bgRoot.wallpaperPath
+                    radius: 0
+                    active: visible
+                    property real imageZoom: 1
+                    scale: bgRoot.centeredImageScale() * (1 / centeredWallpaperShapeItem.shapeZoom) * imageZoom
+                }
+
+                // Live WE content inside the centered shape — samples the same
+                // surface the outer WE loader draws, centre-cropped and scaled
+                // with the same inverse zoom so it stays framed like the stills.
                 Loader {
-                    anchors.fill: parent
-                    active: bgRoot.centeredWallpaperEnabled && bgRoot.weShown && weLoader.item
+                    id: centeredWeLoader
+                    width: bgRoot.width
+                    height: bgRoot.height
+                    anchors.centerIn: parent
+                    active: bgRoot.weShown && weLoader.item
+                    visible: active
+                    property real imageZoom: 1
+                    scale: bgRoot.centeredImageScale() * (1 / centeredWallpaperShapeItem.shapeZoom) * imageZoom
                     sourceComponent: ShaderEffectSource {
+                        anchors.fill: parent
                         sourceItem: weLoader.item
                         live: true
                         hideSource: false
-                        // Centre-crop a square out of the full-screen WE surface
-                        // so the aspect matches the (square) shape - the
-                        // ShaderEffectSource equivalent of PreserveAspectCrop.
                         readonly property real srcW: weLoader.item?.width ?? 0
                         readonly property real srcH: weLoader.item?.height ?? 0
                         readonly property real side: Math.min(srcW, srcH)
@@ -1396,35 +1413,16 @@ Variants {
                     }
                 }
 
-                // Static / video-thumbnail fallback: shown whenever the live WE
-                // surface isn't (stock build, image wallpaper, WE still loading).
-                Item {
-                    id: centeredWallpaperContent
-                    anchors.fill: parent
-                    // Counter-scale for shape pulse (so wallpaper stays put during shape zoom)
-                    transformOrigin: Item.Center
-                    scale: 1 / centeredWallpaperShapeItem.shapeZoom
-
-                    StyledImage {
-                        anchors.fill: parent
-                        visible: !(bgRoot.weShown && weLoader.item)
-                        source: bgRoot.wallpaperPath
-                        fillMode: Image.PreserveAspectCrop
-                        cache: false
-                        antialiasing: true
-                        sourceSize.width: parent.width
-                        sourceSize.height: parent.height
-                    }
-                }
-
                 MouseArea {
                     anchors.fill: parent
+                    z: 1
                     acceptedButtons: Qt.LeftButton
                     onClicked: centeredWallpaperShapeItem.thump()
                     // Scroll cycles the shape (up = next, down = previous), no pulse.
                     // Cooldown locks cycling until the shape change is fully done,
                     // so fast scrolling can't skip through shapes.
                     onWheel: (wheel) => {
+                        if (!Config.options.background.centeredWallpaperShapeCycle) return
                         if (shapeCycleCooldown.running) return
                         GlobalStates.cycleCenteredWallpaperShape(wheel.angleDelta.y > 0 ? 1 : -1)
                         shapeCycleCooldown.restart()
@@ -1510,6 +1508,21 @@ Variants {
             }
 
         } // parallaxViewport
+
+        // Desktop click pulse for centered shape (expressive-pC port) — visible
+        // when centered wallpaper is active on desktop and not yet covering screen.
+        MouseArea {
+            id: centeredDesktopThumpArea
+            z: 2
+            width: Math.max(1, bgRoot.centeredShapeSize())
+            height: width
+            anchors.centerIn: parent
+            visible: bgRoot.centeredWallpaperEnabled
+                && !GlobalStates.screenLocked
+                && (bgRoot.centeredProgress < 1 || bgRoot.centeredAnimating)
+            acceptedButtons: Qt.LeftButton
+            onClicked: GlobalStates.centeredWallpaperThumpRequested()
+        }
 
         WidgetCanvas {
             id: widgetCanvas

@@ -44,6 +44,30 @@ MouseArea {
         interval: 400
     }
 
+    // Clicking the centered wallpaper (square around screen center matching
+    // its locked size) plays the heartbeat thump on the background.
+    // Ported from expressive-pC LockSurface — keeps password field focused.
+    MouseArea {
+        id: centeredWallpaperThumpArea
+        z: 1
+        width: Math.max(1, Config.options.background.centeredWallpaperSize)
+        height: width
+        anchors.centerIn: parent
+        visible: Config.options.background.centeredWallpaper
+        onClicked: {
+            root.forceFieldFocus()
+            GlobalStates.centeredWallpaperThumpRequested()
+        }
+        onWheel: (wheel) => {
+            if (!root.interactive) return
+            if (shapeCycleCooldown.running) return
+            root.forceFieldFocus()
+            GlobalStates.cycleCenteredWallpaperShape(wheel.angleDelta.y > 0 ? 1 : -1)
+            shapeCycleCooldown.restart()
+            wheel.accepted = true
+        }
+    }
+
     property var    artUrl:      MediaArt.resolve(activePlayer?.trackArtUrl ?? "", activePlayer?.metadata)
 
     // ---- the islands' contents, as data --------------------------------
