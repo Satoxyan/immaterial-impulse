@@ -12,10 +12,7 @@ own repo; the installer pins which revision it builds.
 
 ## [Unreleased]
 
-### Fixed
-- **Dragging the Wallpaper Engine crop box no longer scrolls the sidebar.**
-  A vertical drag on the Fill crop picker moved the box and scrolled the
-  whole settings column with it; the picker now keeps the drag to itself.
+## [1.0.0-rc-15] — 2026-09-07
 
 ### Changed
 - **The installer stops hoarding old renderers and caches.** Each Wallpaper
@@ -29,6 +26,9 @@ own repo; the installer pins which revision it builds.
   install logs instead of all of them.
 
 ### Fixed
+- **Dragging the Wallpaper Engine crop box no longer scrolls the sidebar.**
+  A vertical drag on the Fill crop picker moved the box and scrolled the
+  whole settings column with it; the picker now keeps the drag to itself.
 - **Shell memory no longer grows without bound.** The shell gained two to
   three megabytes a minute while idle and around nine while in use - 2.6 GB
   after a ten-hour session - because the QML engine's own garbage collector
