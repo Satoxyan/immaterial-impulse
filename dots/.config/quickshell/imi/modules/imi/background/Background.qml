@@ -170,6 +170,7 @@ Variants {
         property bool centeredAnimationReady: false
         property bool centeredAnimating: false
         property real centeredProgress: 0
+        property int centeredDirection: 0 // 1 unlock (0→1), -1 lock (1→0)
 
         // Unlock is slower (0.8s) than lock (0.65s); the helper picks the
         // animation by direction. It also skips the animation while the config
@@ -177,15 +178,19 @@ Variants {
         function setCenteredProgress(value) {
             if (!bgRoot.centeredWallpaperEnabled || !Config.ready) {
                 bgRoot.centeredProgress = value
+                if (value === 0) bgRoot.centeredDirection = -1
+                else if (value === 1) bgRoot.centeredDirection = 1
                 return
             }
             if (!bgRoot.centeredAnimationReady) {
                 // first real set after config ready — direct, then arm animation for next lock/unlock
                 bgRoot.centeredProgress = value
                 bgRoot.centeredAnimationReady = true
+                bgRoot.centeredDirection = value === 0 ? -1 : 1
                 return
             }
             if (value === bgRoot.centeredProgress) return
+            bgRoot.centeredDirection = value > bgRoot.centeredProgress ? 1 : -1
             const anim = value > bgRoot.centeredProgress ? centeredUnlockAnim : centeredLockAnim
             anim.to = value
             anim.restart()
@@ -225,13 +230,9 @@ Variants {
         readonly property bool centeredHidesFullWallpaper: bgRoot.centeredWallpaperEnabled
             && bgRoot.centeredFullWallpaperOpacity() <= 0
 
-        // Fraction of the transition used for the tiny handover at the desktop
-        // end: the shape (covering the whole screen) hands off to the full
-        // wallpaper image while the solid background fades away underneath.
-        // Both are hidden behind the opaque shape for almost the whole
-        // transition, so the handover only ever shows if a shape silhouette
-        // does not yet cover a screen corner — the fade keeps that smooth too.
-        property real centeredFade: 0.05
+        // Fade dihapus per request — hanya animasi shape. Handover
+        // full wallpaper / background sekarang step, bukan fade 0.05.
+        property real centeredFade: 0.05 // kept for config compat, not used
 
         // Size of the centered shape: grows from centeredWallpaperSize to
         // centeredShapeMax as the progress goes 0 (locked) -> 1 (unlocked).
@@ -262,13 +263,17 @@ Variants {
         }
         function centeredFullWallpaperOpacity() {
             if (!bgRoot.centeredWallpaperEnabled) return 1
-            return Math.max(0, Math.min(1,
-                (bgRoot.centeredProgress - (1 - bgRoot.centeredFade)) / bgRoot.centeredFade))
+            // Desktop→lock (1→0): hilangkan full wallpaper langsung di <1
+            // (hanya shape). Lock→desktop (0→1): handover hard di 1-fade
+            // biar tidak kedip saat shape menutup layar.
+            const threshold = (bgRoot.centeredDirection === -1) ? 1 : (1 - bgRoot.centeredFade)
+            return (bgRoot.centeredProgress >= threshold) ? 1 : 0
         }
         function centeredBgOpacity() {
             if (!bgRoot.centeredWallpaperEnabled) return 0
             if (bgRoot.wallpaperIsVideo) return 0
-            return Math.max(0, Math.min(1, (1 - bgRoot.centeredProgress) / bgRoot.centeredFade))
+            const threshold = (bgRoot.centeredDirection === -1) ? 1 : (1 - bgRoot.centeredFade)
+            return (bgRoot.centeredProgress < threshold) ? 1 : 0
         }
 
         property var shaderList: WallpaperTransitions.shaderValues
@@ -1304,10 +1309,9 @@ Variants {
                 color: bgRoot.centeredWallpaperColor
                 opacity: bgRoot.centeredBgOpacity()
                 visible: opacity > 0
-
-                Behavior on opacity {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                }
+                // Fade dihapus keseluruhan per request — hanya shape yang animasi.
+                // Hard switch di 1-fade (0.95) untuk unlock biar tidak blink,
+                // hard di 1 untuk lock.
             }
 
             MaterialShape {
