@@ -12,6 +12,11 @@ own repo; the installer pins which revision it builds.
 
 ## [Unreleased]
 
+### Fixed
+- **Dragging the Wallpaper Engine crop box no longer scrolls the sidebar.**
+  A vertical drag on the Fill crop picker moved the box and scrolled the
+  whole settings column with it; the picker now keeps the drag to itself.
+
 ### Changed
 - **The installer stops hoarding old renderers and caches.** Each Wallpaper
   Engine pin used to leave the previous ~1.4 GB prebuilt behind (7 of them,
