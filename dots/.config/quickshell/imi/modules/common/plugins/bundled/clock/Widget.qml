@@ -49,12 +49,59 @@ Item {
     // region pass that produces it.
     readonly property bool needsColText: root.clockStyle === "digital"
 
-    // Gap 4: no style draws a panel behind itself, so there is nothing to
-    // frost. An empty region list tells the host to skip the blur surface
-    // rather than frosting the widget's empty bounding box. The cost is a
-    // "Blur background" toggle in the settings panel that does nothing - the
-    // known trade, and the same one the visualizer makes.
-    readonly property var blurRegions: []
+    // Blur latar: cookie = lingkaran 230px, digital/pixel = persegi
+    // ber-radius. Sebelumnya `[]` mematikan toggle "Blur background"
+    // (Gap 4), sehingga user tidak bisa mengaktifkan blur sama sekali.
+    readonly property var blurRegions: {
+        if (!root.shouldShow) return [];
+        if (root.clockStyle === "cookie") {
+            // posisi cookie di dalam contentColumn yang ter-center, mask mengikuti sides
+            const w = cookieClockLoader.width
+            const h = cookieClockLoader.height
+            if (w > 0 && h > 0)
+                return [{ x: cookieClockLoader.x + contentColumn.x, y: cookieClockLoader.y + contentColumn.y, width: w, height: h, radius: w / 2, mask: cookieBlurMask }];
+            return [{ x: 0, y: 0, width: root.width, height: root.height, radius: root.width / 2, mask: cookieBlurMask }];
+        }
+        if (root.clockStyle === "digital") {
+            const w2 = digitalClockLoader.width
+            const h2 = digitalClockLoader.height
+            if (w2 > 0 && h2 > 0)
+                return [{ x: digitalClockLoader.x + contentColumn.x, y: digitalClockLoader.y + contentColumn.y, width: w2, height: h2, radius: Appearance.rounding.large }];
+        }
+        if (root.clockStyle === "pixel") {
+            const w3 = pixelClockLoader.width
+            const h3 = pixelClockLoader.height
+            if (w3 > 0 && h3 > 0)
+                return [{ x: pixelClockLoader.x + contentColumn.x, y: pixelClockLoader.y + contentColumn.y, width: w3, height: h3, radius: Appearance.rounding.large }];
+        }
+        return [{ x: 0, y: 0, width: root.width, height: root.height, radius: Appearance.rounding.large }];
+    }
+    readonly property bool blurEnabled: PluginState.option("clock", "blurEnabled", false)
+    readonly property real backgroundOpacity: PluginState.effectiveBackgroundOpacity("clock")
+    readonly property bool managesBlurTint: root.clockStyle === "cookie"
+    readonly property bool useSineCookie: PluginState.option("clock", "cookieUseSineCookie", false)
+    readonly property int cookieSides: PluginState.option("clock", "cookieSides", 14)
+
+    // Mask agar blur mengikuti sides (lobes) cookie, bukan lingkaran.
+    // Visible false tetap dirender sebagai maskSource oleh WallpaperBlurSurface.
+    Item {
+        id: cookieBlurMask
+        width: 230; height: 230
+        visible: false
+        Loader {
+            anchors.fill: parent
+            active: root.clockStyle === "cookie"
+            sourceComponent: root.useSineCookie ? sineCookieMask : materialCookieMask
+        }
+        Component {
+            id: materialCookieMask
+            MaterialCookie { implicitSize: 230; sides: root.cookieSides; color: "white" }
+        }
+        Component {
+            id: sineCookieMask
+            SineCookie { implicitSize: 230; sides: root.cookieSides; color: "white"; constantlyRotate: false }
+        }
+    }
 
     readonly property var hostScreen: Quickshell.screens.find(screen => screen.name === root.screenName) ?? null
     readonly property real hostScreenWidth: root.hostScreen?.width ?? 0

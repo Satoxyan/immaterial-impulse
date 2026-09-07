@@ -45,7 +45,9 @@ Item {
     readonly property bool useSineCookie: PluginState.option("clock", "cookieUseSineCookie", false)
 
     property color colShadow: Appearance.colors.colShadow
-    property color colBackground: Appearance.colors.colPrimaryContainer
+    readonly property bool blurEnabled: PluginState.option("clock", "blurEnabled", false)
+    readonly property real backgroundOpacity: PluginState.effectiveBackgroundOpacity("clock")
+    property color colBackground: root.blurEnabled ? ColorUtils.applyAlpha(Appearance.colors.colPrimaryContainer, root.backgroundOpacity) : Appearance.colors.colPrimaryContainer
     property color colOnBackground: ColorUtils.mix(Appearance.colors.colSecondary, Appearance.colors.colPrimaryContainer, 0.15)
     property color colBackgroundInfo: ColorUtils.mix(Appearance.colors.colPrimary, Appearance.colors.colPrimaryContainer, 0.55)
     property color colHourHand: Appearance.colors.colPrimary
@@ -195,14 +197,14 @@ Item {
         style: root.dialNumberStyle
     }
 
-    // Stupid extra hour marks in the middle
+    // Stupid extra hour marks in the middle - frosted juga
     FadeLoader {
         id: hourMarksLoader
         anchors.centerIn: parent
         shown: root.hourMarks
         sourceComponent: HourMarks {
             implicitSize: 135 * (1.75 - 0.75 * hourMarksLoader.opacity)
-            color: root.colOnBackground
+            color: root.blurEnabled ? ColorUtils.applyAlpha(root.colOnBackground, root.backgroundOpacity) : root.colOnBackground
             colOnBackground: ColorUtils.mix(root.colBackgroundInfo, root.colOnBackground, 0.5)
         }
     }
