@@ -55,35 +55,25 @@ Item {
     readonly property list<string> clockNumbers: DateTime.time.split(/[: ]/)
     readonly property int clockHour: parseInt(clockNumbers[0]) % 12
     readonly property int clockMinute: DateTime.clock.minutes
-    // Glide vs tick (the maintainer's rule): normally the hand GLIDES -
-    // its angle derives purely from the one sampled wall-clock, so there is
-    // no second boundary for two clocks to disagree over (feeding the sweep
-    // from Date.now() while the mark came from a SystemClock double-counted
-    // the boundary: the hand overshot, then flickered back). On power saver
-    // it TICKS instead - per-frame sampling is exactly what that profile
-    // asks not to spend - stepped by a SystemClock that runs at Seconds only
-    // then.
+    // Tick vs glide dikunci ke toggle constantlyRotate:
+    // - off -> berdetak (tick) 1 langkah/detik via SystemClock, tanpa Timer 30Hz
+    // - on  -> mulus (glide) 30Hz bersama putaran body, linear sweep.
     readonly property bool handShown: root.secondHandStyle !== "hide"
-    readonly property bool handTicks: PowerProfiles.profile === PowerProfile.PowerSaver
+    readonly property bool handTicks: !root.constantlyRotate
     readonly property var secondsClock: SystemClock {
-        precision: (root.handShown && root.handTicks) ? SystemClock.Seconds
-                                                      : SystemClock.Minutes
+        precision: (root.handShown && root.handTicks) ? SystemClock.Seconds : SystemClock.Minutes
     }
     readonly property int clockSecond: root.handTicks
         ? root.secondsClock.seconds
         : Math.floor(root.motionClockMs / 1000) % 60
 
-    // Continuous motion - the body's spin and the second hand's sweep - is
-    // sampled from the wall clock at this rate rather than animated per
-    // vsync. See the body's `rotation` for the measurement behind the number.
+    // Body spin + glide di-sample 30Hz (bukan per-vsync) - lihat `rotation`.
     readonly property int motionTickHz: 30
     readonly property int spinPeriodMs: 30000
     property real motionClockMs: 0
 
-    // The within-second fraction of the glide, LINEAR: a glide is a
-    // constant angular speed, and any easing here re-introduces a per-second
-    // rhythm the maintainer asked to be rid of. Zero while ticking, so the
-    // hand sits on its mark.
+    // Fraksi dalam detik untuk glide, linear (kecepatan sudut konstan).
+    // Nol saat tick sehingga jarum duduk di mark.
     readonly property real secondSweep: root.handTicks
         ? 0
         : (root.motionClockMs % 1000) / 1000
@@ -151,7 +141,7 @@ Item {
         dragging: root.dragging
 
         Timer {
-            running: (root.constantlyRotate || (root.handShown && !root.handTicks)) && cookieBody.visible
+            running: root.constantlyRotate && cookieBody.visible
             interval: Math.round(1000 / root.motionTickHz)
             repeat: true
             triggeredOnStart: true
@@ -174,7 +164,7 @@ Item {
         // ancestor is hidden, so a desktop behind a fullscreen game spends
         // nothing here. Measured against FFXIV's own counter: 52 fps with the
         // spin ungated, 94 gated, 108 with the shell not running at all.
-        rotation: 360 - (root.motionClockMs % root.spinPeriodMs) / root.spinPeriodMs * 360
+        rotation: root.constantlyRotate ? 360 - (root.motionClockMs % root.spinPeriodMs) / root.spinPeriodMs * 360 : 0
 
         Loader {
             id: sineCookieLoader

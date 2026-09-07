@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import Quickshell
+import qs.modules.common
 
 import "./offset.js" as Offset
 import "./corner-rounding.js" as CornerRounding
@@ -17,6 +18,10 @@ Item {
     implicitHeight: implicitSize
 
     property var cornerRounding: new CornerRounding.CornerRounding((sides < 17 ? 1.5 : 1.1) / Math.max(sides, 1))
+
+    Behavior on sides {
+        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+    }
 
     ShapeCanvas {
         id: shapeCanvas

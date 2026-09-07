@@ -43,8 +43,10 @@ def test_the_body_spin_is_a_function_of_sampled_time():
         "CookieClock animates its rotation per vsync again - that was 38% of the GPU at idle"
     assert "loops: Animation.Infinite" not in text, \
         "CookieClock carries an infinite animation again"
-    assert re.search(r"rotation:\s*360\s*-\s*\(root\.motionClockMs", text), \
+    assert re.search(r"rotation:.*360\s*-\s*\(root\.motionClockMs", text), \
         "the body's rotation no longer derives from `motionClockMs` - what drives it now?"
+    assert re.search(r"root\.constantlyRotate\s*\?", text), \
+        "the body's rotation is not gated on `constantlyRotate` - the toggle does nothing"
     assert re.search(r"onTriggered:\s*root\.motionClockMs\s*=\s*Date\.now\(\)", text), \
         "nothing samples the wall clock into `motionClockMs`"
 
@@ -72,10 +74,10 @@ def test_the_tick_rate_is_declared_and_capped():
          "Raise MAX_TICK_HZ here only with a new measurement")
     assert re.search(r"interval:\s*Math\.round\(1000\s*/\s*root\.motionTickHz\)", text), \
         "the tick Timer's interval is not derived from `motionTickHz`"
-    # The smooth second hand widened WHEN the tick runs (constantlyRotate,
-    # or a shown non-ticking hand gliding); what this pin protects is the
-    # visibility gate on whatever that condition is.
-    assert re.search(r"running:\s*\(.*\)\s*&&\s*cookieBody\.visible", text), \
+    # The spin's Timer is gated on the cookie being ON SCREEN; previously
+    # the second hand's glide also widened WHEN it ran, now tick is 1Hz via
+    # SystemClock and the Timer is only for the body spin.
+    assert re.search(r"running:.*cookieBody\.visible", text), \
         "the tick is not gated on the cookie being ON SCREEN - a desktop behind a fullscreen game would pay for it"
 
 
