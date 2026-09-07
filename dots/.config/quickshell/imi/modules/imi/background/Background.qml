@@ -1134,10 +1134,10 @@ Variants {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
                 cache: true
+                mipmap: true
                 smooth: true
                 asynchronous: true
-                layer.enabled: bgRoot.wallpaperAnimation !== ""
-                    && bgRoot.transitionProgress < 1
+                layer.enabled: true
                 visible: false
             }
 
@@ -1146,10 +1146,10 @@ Variants {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
                 cache: true
+                mipmap: true
                 smooth: true
                 asynchronous: true
-                layer.enabled: bgRoot.wallpaperAnimation !== ""
-                    && bgRoot.transitionProgress < 1
+                layer.enabled: true
                 // The plain image is the wallpaper. It is always drawn (a
                 // transition only paints *over* it for the length of the
                 // animation - see transitionEffect), so nothing about the
@@ -1175,16 +1175,17 @@ Variants {
             ShaderEffect {
                 id: transitionEffect
                 anchors.fill: parent
+                layer.enabled: true
                 // Only while a switch is in flight. Once it settles the plain
                 // image below is already showing exactly what progress 1.0
                 // would draw, so keeping the shader up buys nothing and costs a
-                // full-screen pass every frame - and, because layer.enabled
-                // drops with the same binding, it would sample the images at
-                // their natural size and stretch them to the screen rather than
-                // PreserveAspectCrop.
+                // full-screen pass every frame.
                 visible: !bgRoot.weShown && !blurLoader.active && bgRoot.wallpaperAnimation !== "" && !bgRoot.centeredShapeActive && !bgRoot.videoRevealed && !bgRoot.transitionShaderBroken && bgRoot.transitionProgress < 1
                 property var fromImage: previousWallpaper
                 property var toImage: wallpaper
+                property var source1: previousWallpaper
+                property var source2: wallpaper
+                property real time: 0.0
                 property real progress: bgRoot.transitionProgress
                 property real aspectX: width / height
                 property real aspectY: 1.0
@@ -1193,6 +1194,13 @@ Variants {
                 fragmentShader: bgRoot.wallpaperAnimation !== ""
                     ? Qt.resolvedUrl(`shaders/${bgRoot.currentShader}.frag.qsb`)
                     : ""
+                Timer {
+                    interval: 16
+                    repeat: true
+                    running: transitionEffect.visible
+                    onTriggered: transitionEffect.time += interval / 1000.0
+                }
+                onVisibleChanged: if (!visible) transitionEffect.time = 0.0
                 onStatusChanged: {
                     // Covers a .qsb that is missing or will not parse. It does
                     // NOT cover a shader the driver refuses to compile: Qt bakes
