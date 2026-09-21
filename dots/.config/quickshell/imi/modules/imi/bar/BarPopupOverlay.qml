@@ -253,21 +253,39 @@ Scope {
                 }
 
                 const arriving = popup.contentItem;
+                // Coming from idle there is no geometry to morph from (the
+                // card is parked at its widget below, before anything animates).
+                const fresh = card.width <= 0 || card.openHeight <= 0;
                 if (arriving) {
                     arriving.parent = contentSlot;
                     arriving.anchors.centerIn = contentSlot;
                     arriving.enabled = true;
-                    arriving.opacity = 0;
                     contentEnter.stop();
-                    contentEnter.item = arriving;
-                    contentEnter.restart();
+                    if (fresh && overlayWindow.cardFused) {
+                        // A fused card grows out of the band from nothing, and
+                        // the frame paints its plate at full strength from the
+                        // first row - a fused plate cannot fade, that would be
+                        // the seam. So its content is there from the first
+                        // frame too and the growing plate REVEALS it (the host
+                        // clips, the slot is pinned to the band-side edge):
+                        // the unroll. The pause-then-fade below is the
+                        // takeover's, sized to the outgoing content's fade;
+                        // run on a fresh fused open it left the plate empty
+                        // for its first 200 ms and faded the content into a
+                        // card that had already arrived (burst, 12 ms frames).
+                        // The sections below the fold still park and cascade
+                        // once the card has arrived (wavePending).
+                        arriving.opacity = 1;
+                    } else {
+                        arriving.opacity = 0;
+                        contentEnter.item = arriving;
+                        contentEnter.restart();
+                    }
                 }
                 popup.surfaceWindow = overlayWindow;
                 popup.popupHovered = cardHover.hovered;
 
-                // Coming from idle there is no geometry to morph from, so put
-                // the card at the widget it belongs to before anything animates.
-                if (card.width <= 0 || card.openHeight <= 0) {
+                if (fresh) {
                     overlayWindow.park();
                     // A fresh open arms the wave: the sections below the fold
                     // are put away before the card is on screen, and the gate

@@ -11,6 +11,10 @@ own repo; the installer pins which revision it builds.
 
 ## [Unreleased]
 
+### Fixed
+- Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
+  and fills in afterwards; its content is revealed by the plate as it grows.
+
 ## [1.3.1] — 2026-09-21
 
 ### Fixed

@@ -347,3 +347,12 @@ translucent against the band, it is the band.
   in with the lift where a Rectangle's border would have popped at 1. Notifications carry
   none - their card never had one. In the translucent layer the stroke's colour is made
   solid like the fill's and takes the frame's alpha once, with the rest of the paint.
+- **The entrance's empty plate** (burst at 12 ms frames, sandbox): a fused card opened fresh
+  grew out of the band for its first 200 ms with nothing in it, and its content faded into a
+  card that had already arrived. The content's pause-then-fade is the takeover's - sized to the
+  outgoing content's fade - and a free card hid the lag behind its own opacity ramp; a fused
+  plate is painted by the frame at full strength from its first row and cannot fade (that
+  would be the seam). A fresh fused open now puts the content in at full strength and lets
+  the growing plate reveal it - the host clips and the slot is pinned to the band-side edge,
+  so this is the unroll - while the sections below the fold still park and cascade once the
+  card has arrived. Takeovers and released opens keep the pause and the fade.

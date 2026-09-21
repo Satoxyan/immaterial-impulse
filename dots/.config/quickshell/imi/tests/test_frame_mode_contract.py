@@ -593,6 +593,14 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn(": Appearance.borderWidth.standard * Math.min(1, dockJoin.lift / dockJoin.travel)", dock)
         self.assertIn("strokeWidth: dockJoin.strokeWidth, strokeColor: dockJoin.strokeColor", dock)
 
+    def test_a_fresh_fused_open_reveals_its_content(self):
+        # frame-pin-grammar.md §7, the entrance: a fused plate cannot fade, so
+        # its content is there from the first frame and the growing plate
+        # reveals it; the pause-then-fade is the takeover's alone.
+        overlay = _strip((ROOT / "modules/imi/bar/BarPopupOverlay.qml").read_text())
+        self.assertIn("const fresh = card.width <= 0 || card.openHeight <= 0;", overlay)
+        self.assertRegex(overlay, r"if \(fresh && overlayWindow\.cardFused\) \{\s*arriving\.opacity = 1;\s*\} else \{\s*arriving\.opacity = 0;\s*contentEnter\.item = arriving;\s*contentEnter\.restart\(\);")
+
     def test_the_family_gates_the_surface_on_the_option(self):
         fam = FAMILY.read_text()
         self.assertIn("PanelLoader { extraCondition: FrameGeometry.enabled; component: Frame {} }", fam, "the family agrees with the authority (the vertical bar is not framed)")
