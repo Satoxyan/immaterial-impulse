@@ -628,6 +628,8 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("readonly property bool fusedNow: previewPopup.show ? !(previewPopup.willOutgrow || previewPopup.openDone) : !previewPopup.outgrows", drag)
         self.assertRegex(drag, r"if \(!previewPopup\.openAnim\.running && previewPopup\.show && previewPopup\.openProgress >= 0\.999\)\s*previewPopup\.openDone = true;")
         self.assertIn("if (previewPopup.willOutgrow || previewJoin.lift <= 0.5) {\n                previewPopup.submerge();", drag)
+        self.assertIn("const necked = previewPopup.willOutgrow ? 0 : grown;", drag, "no meniscus under a card that was never fused")
+        self.assertIn("neck: previewJoin.state.neck * necked, bulge: previewJoin.state.bulge * necked,", drag)
         self.assertIn("if (previewPopup.landing && previewJoin.lift < 0.75 && previewJoin.state.neck > 0.9) previewPopup.submerge();", drag)
         # The card slides between icons by its centre, never by `x`: the
         # width grows with the content and a Behavior on x glided the card

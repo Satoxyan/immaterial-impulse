@@ -367,7 +367,9 @@ translucent against the band, it is the band.
   finishes, one whose SETTLED width outgrows the flat is released from the first frame - fused
   under a narrower pill its shoulders stood past the pill's sides (seen live), and releasing on
   the current width still left three frames of that, the spring being slower off the mark than
-  the growth; the pointer leaving lands a fitting card first and sinks it when landed (the bar
+  the growth, and such a card publishes no neck and no bulge at all - released from its first
+  frame, the join's neck still starts whole and decays over the spring's first frames, which drew
+  fillets under a card that was never fused (seen live); the pointer leaving lands a fitting card first and sinks it when landed (the bar
   popup's landing test), and shrinks an outgrowing one first, re-attaching it as a drop once it
   fits. No fade in frame mode - the frame's plate cannot fade. Two things measured
   in the sandbox (top edge; the nested output's screen height is wrong in Quickshell there, so a

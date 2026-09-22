@@ -707,13 +707,19 @@ Item {
                 if (popupBackground.height <= 3) return null;
                 const o = previewPopup.screenOrigin;
                 const grown = Math.pow(Math.min(1, popupBackground.height / Math.max(1, previewJoin.meniscus)), 2);
+                // No meniscus for a card that outgrows the pill: released from
+                // its first frame, the join's neck still starts whole and
+                // decays over the spring's first frames, and those frames
+                // drew fillets under a card that was never fused (seen live).
+                // Same rule as the bar popup's card wider than its island.
+                const necked = previewPopup.willOutgrow ? 0 : grown;
                 return {
                     edge: root.dockEdge,
                     plate: { x: o.x + popupMouseArea.x + popupBackground.x, y: o.y + popupMouseArea.y + popupBackground.y,
                              width: popupBackground.width, height: popupBackground.height },
                     radii: { topLeft: popupBackground.radius, topRight: popupBackground.radius,
                              bottomRight: popupBackground.radius, bottomLeft: popupBackground.radius },
-                    gap: previewJoin.state.gap, neck: previewJoin.state.neck * grown, bulge: previewJoin.state.bulge * grown,
+                    gap: previewJoin.state.gap, neck: previewJoin.state.neck * necked, bulge: previewJoin.state.bulge * necked,
                     meniscus: previewJoin.meniscus, blendPerPixel: previewJoin.blendPerPixel,
                     climbFraction: previewJoin.climbFraction, color: popupMouseArea.platePaint,
                     // The released card's border, fading in with the lift.
