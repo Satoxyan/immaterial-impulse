@@ -601,6 +601,43 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("const fresh = card.width <= 0 || card.openHeight <= 0;", overlay)
         self.assertRegex(overlay, r"if \(fresh && overlayWindow\.cardFused\) \{\s*arriving\.opacity = 1;\s*\} else \{\s*arriving\.opacity = 0;\s*contentEnter\.item = arriving;\s*contentEnter\.restart\(\);")
 
+    def test_the_docks_window_preview_emerges_from_the_pill(self):
+        # frame-pin-grammar.md, the dock preview row: the card is always a
+        # released card, but it emerges from the pill - a join on the dock's
+        # plate, fused while it grows, lifting off once grown - and lands and
+        # sinks back into it on close. The frame paints it under "dockPreview"
+        # against the dock record's inner edge.
+        frame = _strip((ROOT / "modules/imi/frame/Frame.qml").read_text())
+        self.assertIn('if (key === "dockPreview" && d && d.edge === edge)', frame)
+        self.assertIn('if (key === "dockPreview") return 480;', frame)
+        drag = _strip((ROOT / "modules/imi/dock/DragApps.qml").read_text())
+        self.assertIn("readonly property bool previewJoinsFrame: root.frameJoined && FrameGeometry.enabled", drag)
+        self.assertIn("id: previewJoin", drag)
+        self.assertIn("attached: previewPopup.fusedNow", drag)
+        self.assertIn("paintsAtRest: true", drag.split("id: previewJoin", 1)[1].split("}", 1)[0])
+        self.assertIn('GlobalStates.publishFrameJoin(name, "dockPreview", record);', drag)
+        self.assertIn("rect: previewPopup.innerEdgeRect", drag, "the popup hangs off the pill's inner edge, so bandInset is 0")
+        self.assertIn("bandInset: 0", drag)
+        # The phases: grow fused, release once grown, land before sinking.
+        self.assertIn("previewPopup.fusedNow = true;\n            previewPopup.openProgress = 1;", drag)
+        self.assertRegex(drag, r"if \(!previewPopup\.openAnim\.running && previewPopup\.show && previewPopup\.openProgress >= 0\.999\)\s*previewPopup\.fusedNow = false;")
+        self.assertIn("if (previewJoin.lift > 0.5) {\n                previewPopup.landing = true;", drag)
+        self.assertIn("if (previewPopup.landing && previewJoin.lift < 0.75 && previewJoin.state.neck > 0.9) previewPopup.submerge();", drag)
+        # The card slides between icons by its centre, never by `x`: the
+        # width grows with the content and a Behavior on x glided the card
+        # sideways after it had grown (traced).
+        self.assertIn("property real slideCenter: previewPopup.cachedCenter", drag)
+        self.assertNotIn("Behavior on x", drag.split("id: popupMouseArea", 1)[1].split("id: previewJoin", 1)[0])
+        # No fade in frame mode; the content is revealed by the growth from
+        # the pill's side, and the card's own plate stands down for the frame.
+        self.assertIn("opacity: root.previewJoinsFrame ? 1 : (previewPopup.show ? 1 : 0)", drag)
+        self.assertIn('color: plateOnFrame ? "transparent" : Appearance.m3colors.m3surfaceContainer', drag)
+        self.assertIn("height: Math.max(0, implicitHeight * grow)", drag)
+        dock = _strip((ROOT / "modules/imi/dock/Dock.qml").read_text())
+        self.assertIn("surfaceOrigin: dockRoot.surfaceOriginPoint", dock)
+        self.assertIn("frameJoined: dockJoin.active && !dockRoot.fullscreenOnThisMonitor", dock)
+        self.assertIn("readonly property point surfaceOriginPoint:", dock)
+
     def test_the_family_gates_the_surface_on_the_option(self):
         fam = FAMILY.read_text()
         self.assertIn("PanelLoader { extraCondition: FrameGeometry.enabled; component: Frame {} }", fam, "the family agrees with the authority (the vertical bar is not framed)")

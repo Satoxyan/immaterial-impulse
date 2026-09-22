@@ -32,6 +32,7 @@ Settings > Appearance > Frame gets one row per surface to override the default.
 | bar widget popup | click (`StyledPopup.pinnedOpen`, tray menus, Docker/Discord plugins) | released, as today | already pinned | close: swallow into the band, submerge |
 | notification | arrives (`Notifications.popupList`), emerging from its band | fused to the band on its edge (`*_right`, `*_left`; the centre positions stay released) | a **Pin** button, or a drag away from the band past a threshold: releases it and cancels its timeout - it persists. Unpin (the button, or a drag back that ends nearer the band than the pinned rest) fuses it back and restarts its clock | close (the x) or timeout: a released card lands first, then slides into the band. A drag toward the band is never stopped: the join forms with the approach, past the edge the card goes under, and let go there it slides the rest of the way in and closes. Away from the band the pull is elastic to a limit and springs back short of the threshold |
 | dock | reveal at the edge (unpinned) | fused: reveals out of the band and hides back into it | the dock's pin: released, reserves its edge (`DockReservation`) | unpin: lands, fuses; then hides into the band when the pointer leaves |
+| dock window preview | hovering a dock icon (`DragApps.previewPopup`) | released - always floating - but it **emerges from the pill**: a join on the dock's plate (`dockPreview`), fused while it grows out of the pill from a parked square, lifting off to the elevation gap once grown; slides along the dock between icons | none (never pinned) | pointer leaving: lands on the pill, then sinks into it |
 | bar | always on | Plate style: **Hug** (fused to the hairline band on its edge) while a window is on the monitor's active workspace - the frame is the border around the windows - and **Float** (lifted by the compositor's gap from the band's inner edge, inset from the side bands by the same, corners rounding with the lift) over an empty workspace (`FrameGeometry.barAttachedFor`; the Bar state row / `appearance.frame.bar` "auto"/"attached"/"floating"). Islands follow the same state, each on its own; M3 only floats | `bar togglePin` over IPC (`GlobalStates.barPinned`): pinned is released whatever the workspace holds; unpin returns to the workspace rule | released, the bar reserves its lift as well (the dock's flip rule: once per state change, on the compositor's own animation), so windows make room and the island has its gap on every side; bar popups fuse to the plate's inner edge wherever the lift put it; auto-hide in frame mode is still a split (out of scope, frame-one-surface.md §7) |
 
 Two things the table changes on purpose:
@@ -356,3 +357,20 @@ translucent against the band, it is the band.
   the growing plate reveal it - the host clips and the slot is pinned to the band-side edge,
   so this is the unroll - while the sections below the fold still park and cascade once the
   card has arrived. Takeovers and released opens keep the pause and the fade.
+- **The dock's window preview** (2026-09-23): the card is a join on the dock's plate under
+  `dockPreview` - the frame paints it against the dock record's inner edge, 480 deep. The popup
+  hangs off the pill's inner edge rather than the dock window's edge (a zero-thickness anchor
+  rect in the dock window's coordinates), so its dock-side edge is the band the card joins and
+  `bandInset` is 0. Three phases: `openProgress` grows the card out of the pill fused (width from
+  a parked square, height from nothing, the content pinned to the pill's side and revealed by the
+  growth); the growth's own animation finishing releases it (`fusedNow` false, the lift is the
+  spring's); the pointer leaving lands it first and sinks it when landed, the same landing test
+  as the bar popup's. No fade in frame mode - the frame's plate cannot fade. Two things measured
+  in the sandbox (top edge; the nested output's screen height is wrong in Quickshell there, so a
+  bottom dock's screen y is stale - sandbox only): a Behavior on the mouse area's `x` glided the
+  card 200 px sideways after it had grown, because the width grows with the content and `x` is
+  centred on it - the CENTRE slides now, not the coordinate; and at the growth's peak the plate
+  is one vblank behind the content (60 px at 60 Hz, the cross-window skew from
+  frame-one-surface.md stage 2), a quarter of that at 240 Hz. Cursor moves in the nested
+  compositor do not hover the dock's buttons; the drive is signal-level (a probe sets
+  `lastHoveredButton`/`buttonHovered`).

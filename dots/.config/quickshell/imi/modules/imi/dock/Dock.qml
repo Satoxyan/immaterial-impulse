@@ -32,6 +32,15 @@ Scope {
 
         PanelWindow {
             id: dockRoot
+            // Where this window sits on the screen (the compositor was asked
+            // for it, DockGeometry.surfaceOrigin): what the plate's record and
+            // the window-preview card's add to their own coordinates.
+            readonly property point surfaceOriginPoint: {
+                const o = DockGeometry.surfaceOrigin(root.edge,
+                    dockRoot.screen?.width ?? 0, dockRoot.screen?.height ?? 0, dockRoot.width, dockRoot.height,
+                    dockRoot.frameMargins[DockGeometry.outwardSide(root.edge)]);
+                return Qt.point(o.x, o.y);
+            }
             required property var modelData
             screen: modelData
             // The Lockscreen tab rides the lock's own teardown (spec §1.5).
@@ -524,6 +533,17 @@ Scope {
                             DragApps {
                                 id: dragSlots
                                 visible: dockRow.hasPinnedApps
+                                // What the window-preview card joins in frame
+                                // mode (frame-pin-grammar.md, the dock preview
+                                // row): the pill's rect in this window, the
+                                // window's place on the screen, and whether the
+                                // frame is painting the pill at all.
+                                plateRect: Qt.rect(
+                                    dockMouseArea.x + dockHoverRegion.x + dockBackground.x + dockVisualBackground.x,
+                                    dockMouseArea.y + dockHoverRegion.y + dockBackground.y + dockVisualBackground.y,
+                                    dockVisualBackground.width, dockVisualBackground.height)
+                                surfaceOrigin: dockRoot.surfaceOriginPoint
+                                frameJoined: dockJoin.active && !dockRoot.fullscreenOnThisMonitor
                                 // space25 across the thickness; the negative
                                 // margin is a pull-in at the LEADING end of the
                                 // strip, closing the gap an absent pin button

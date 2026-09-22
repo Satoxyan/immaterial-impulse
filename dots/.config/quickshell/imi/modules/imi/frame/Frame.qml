@@ -248,6 +248,13 @@ Scope {
                 function joinBandEdgeFor(key, edge) {
                     const b = surface.barRecord;
                     if (key === "barPopup" && b && b.edge === edge) return surface.barInnerEdge;
+                    // The dock's window-preview card joins the dock's PLATE on
+                    // its inner edge, wherever the dock's own lift put it
+                    // (frame-pin-grammar.md, the dock preview row).
+                    const d = surface.joins.dock ?? null;
+                    if (key === "dockPreview" && d && d.edge === edge)
+                        return edge === "bottom" ? d.plate.y : edge === "top" ? d.plate.y + d.plate.height
+                             : edge === "right" ? d.plate.x : d.plate.x + d.plate.width;
                     // Islands: the popup's band is its section's island (the
                     // popup's record names the section; Bar.qml publishes the
                     // islands' records).
@@ -271,6 +278,7 @@ Scope {
                 // plate would remake the field every frame.
                 function joinStripDepthFor(key) {
                     if (key === "barPopup") return 720;
+                    if (key === "dockPreview") return 480;
                     if (String(key).startsWith("notification")) return 480;
                     return 160;
                 }
