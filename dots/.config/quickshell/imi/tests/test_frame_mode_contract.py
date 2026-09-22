@@ -641,6 +641,11 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("opacity: root.previewJoinsFrame ? 1 : (previewPopup.show ? 1 : 0)", drag)
         self.assertIn('color: plateOnFrame ? "transparent" : Appearance.m3colors.m3surfaceContainer', drag)
         self.assertIn("height: Math.max(0, implicitHeight * grow)", drag)
+        # The strip's hover: a button's leave is guarded on being the hovered
+        # button, and the hide debounce outlasts the show's, or the card closed
+        # on the way from one icon to the next (footage).
+        self.assertIn("} else if (root.lastHoveredButton === dockBtn) {\n                        root.buttonHovered = false", drag)
+        self.assertIn("interval: previewPopup.shouldShow ? 100 : 250", drag)
         dock = _strip((ROOT / "modules/imi/dock/Dock.qml").read_text())
         self.assertIn("surfaceOrigin: dockRoot.surfaceOriginPoint", dock)
         self.assertIn("frameJoined: dockJoin.active && !dockRoot.fullscreenOnThisMonitor", dock)

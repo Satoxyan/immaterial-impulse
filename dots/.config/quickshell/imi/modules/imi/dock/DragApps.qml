@@ -205,11 +205,17 @@ Item {
                 insetOutward: Appearance.sizes.hyprlandGapsOut + Appearance.spacing.space100
 
                 hoverEnabled: true
+                // The exit is guarded on being the button the strip still
+                // counts as hovered: the next button's enter can land before
+                // this one's leave, and an unguarded leave then turned the
+                // strip's hover off under a pointer that was on a button -
+                // the preview closed and had to re-emerge (footage). The
+                // running apps' buttons (DockAppButton) guard theirs the same.
                 onHoveredChanged: {
                     if (hovered) {
                         root.lastHoveredButton = dockBtn
                         root.buttonHovered = true
-                    } else {
+                    } else if (root.lastHoveredButton === dockBtn) {
                         root.buttonHovered = false
                     }
                 }
@@ -593,9 +599,14 @@ Item {
             updateTimer.restart()
         }
 
+        // Debounced both ways, and the hide waits longer than the show: the
+        // strip's hover drops for a moment between two buttons, and a hide
+        // as quick as the show closed the card on the way from one icon to
+        // the next and made it re-emerge (footage). A card lingering a
+        // quarter second after the pointer has left reads as nothing.
         Timer {
             id: updateTimer
-            interval: 100
+            interval: previewPopup.shouldShow ? 100 : 250
             onTriggered: {
                 previewPopup.show = previewPopup.shouldShow
             }

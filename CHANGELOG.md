@@ -19,6 +19,7 @@ own repo; the installer pins which revision it builds.
   it fades as before.
 
 ### Fixed
+- The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
   and fills in afterwards; its content is revealed by the plate as it grows.
 

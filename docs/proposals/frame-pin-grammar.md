@@ -380,3 +380,12 @@ translucent against the band, it is the band.
   frame-one-surface.md stage 2), a quarter of that at 240 Hz. Cursor moves in the nested
   compositor do not hover the dock's buttons; the drive is signal-level (a probe sets
   `lastHoveredButton`/`buttonHovered`).
+- **The preview closing on the way between icons** (footage, 2026-09-23): the card collapsed
+  to its drop and re-emerged with the next app instead of sliding. Two causes in the strip's
+  hover. The pinned buttons' leave turned the strip's hover off unguarded, so the next button's
+  enter landing before the previous one's leave switched the hover off under a pointer that was
+  on a button (the running apps' buttons guard theirs on being the hovered button; the pinned
+  ones now do too). And the hide debounce was as quick as the show's (100 ms), so the hover
+  dropping for a moment between two buttons closed the card; the hide waits 250 ms now. A
+  window appearing or leaving under a live preview does not close it (measured: TaskbarApps
+  re-mints its entries and the card grows to the new thumbnail).
