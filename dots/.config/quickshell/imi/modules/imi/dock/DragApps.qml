@@ -484,13 +484,27 @@ Item {
         // ---- the join (frame mode) ------------------------------------
         //
         // One scalar grows the card out of the pill: 0 nothing, 1 the whole
-        // card, on the spatial tier. The card is fused while it grows
-        // (`fusedNow`), lifts off the pill once the growth has run, and on
-        // close comes back down first (`landing`) and sinks when it has
-        // landed - the grammar's close: swallow, then sink.
+        // card, on the spatial tier. A card that FITS the pill's flat is
+        // fused while it grows and lifts off once grown. A card that will
+        // outgrow the pill - wider, settled, than the flat between the pill's
+        // corners - lifts from the first frame, so the drop emerges and
+        // detaches in one motion and is only ever wide once it is off: fused
+        // under a narrower pill its shoulders stood past the pill's sides
+        // (seen live, KCalc's preview under a two-icon pill), and releasing
+        // on the CURRENT width still left three frames of that, the spring
+        // being slower off the mark than the growth. The close is the
+        // mirror: a card that outgrows the pill shrinks first and
+        // re-attaches when it fits again, landing as a drop; one that fits
+        // lands first (`landing`) and sinks when landed - the grammar's
+        // close: swallow, then sink.
         property real openProgress: 0
-        property bool fusedNow: true
+        property bool openDone: false
         property bool landing: false
+        // The pill's flat along the dock, between its corner radii.
+        readonly property real pillFlat: (root.vertical ? root.plateRect.height : root.plateRect.width) - 2 * Appearance.rounding.large
+        readonly property bool willOutgrow: (root.vertical ? popupBackground.implicitHeight : popupBackground.implicitWidth) > previewPopup.pillFlat
+        readonly property bool outgrows: (root.vertical ? popupBackground.height : popupBackground.width) > previewPopup.pillFlat
+        readonly property bool fusedNow: previewPopup.show ? !(previewPopup.willOutgrow || previewPopup.openDone) : !previewPopup.outgrows
         readonly property NumberAnimation openAnim: Appearance.animation.elementMove.numberAnimation.createObject(previewPopup)
         Behavior on openProgress {
             enabled: root.previewJoinsFrame
@@ -504,31 +518,26 @@ Item {
         function emerge() {
             previewPopup.landing = false;
             // Already up (a re-hover that reversed a landing): lift again.
-            if (previewPopup.openProgress >= 0.999 && popupBackground.height > 0) {
-                previewPopup.fusedNow = false;
-                return;
-            }
-            previewPopup.fusedNow = true;
+            previewPopup.openDone = previewPopup.openProgress >= 0.999 && popupBackground.height > 0;
             previewPopup.openProgress = 1;
         }
         Connections {
             target: previewPopup.openAnim
             function onRunningChanged() {
                 if (!previewPopup.openAnim.running && previewPopup.show && previewPopup.openProgress >= 0.999)
-                    previewPopup.fusedNow = false;
+                    previewPopup.openDone = true;
             }
         }
         function leave() {
-            if (previewJoin.lift > 0.5) {
-                previewPopup.landing = true;
-                previewPopup.fusedNow = true;
+            previewPopup.openDone = false;
+            if (previewPopup.willOutgrow || previewJoin.lift <= 0.5) {
+                previewPopup.submerge();
                 return;
             }
-            previewPopup.submerge();
+            previewPopup.landing = true;
         }
         function submerge() {
             previewPopup.landing = false;
-            previewPopup.fusedNow = true;
             previewPopup.openProgress = 0;
         }
         // Landed when the gap is closed and the neck whole, not when the

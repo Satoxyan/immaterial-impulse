@@ -618,10 +618,16 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn('GlobalStates.publishFrameJoin(name, "dockPreview", record);', drag)
         self.assertIn("rect: previewPopup.innerEdgeRect", drag, "the popup hangs off the pill's inner edge, so bandInset is 0")
         self.assertIn("bandInset: 0", drag)
-        # The phases: grow fused, release once grown, land before sinking.
-        self.assertIn("previewPopup.fusedNow = true;\n            previewPopup.openProgress = 1;", drag)
-        self.assertRegex(drag, r"if \(!previewPopup\.openAnim\.running && previewPopup\.show && previewPopup\.openProgress >= 0\.999\)\s*previewPopup\.fusedNow = false;")
-        self.assertIn("if (previewJoin.lift > 0.5) {\n                previewPopup.landing = true;", drag)
+        # The phases: grow fused; release once grown OR the moment the card
+        # outgrows the pill's flat (a wider card fused under a narrow pill had
+        # shoulders past its sides - seen live); on close a card that
+        # outgrows shrinks first and re-attaches when it fits, one that fits
+        # lands before sinking.
+        self.assertIn("readonly property bool outgrows: (root.vertical ? popupBackground.height : popupBackground.width) > previewPopup.pillFlat", drag)
+        self.assertIn("readonly property bool willOutgrow: (root.vertical ? popupBackground.implicitHeight : popupBackground.implicitWidth) > previewPopup.pillFlat", drag, "decided from the settled width, so it lifts from the first frame")
+        self.assertIn("readonly property bool fusedNow: previewPopup.show ? !(previewPopup.willOutgrow || previewPopup.openDone) : !previewPopup.outgrows", drag)
+        self.assertRegex(drag, r"if \(!previewPopup\.openAnim\.running && previewPopup\.show && previewPopup\.openProgress >= 0\.999\)\s*previewPopup\.openDone = true;")
+        self.assertIn("if (previewPopup.willOutgrow || previewJoin.lift <= 0.5) {\n                previewPopup.submerge();", drag)
         self.assertIn("if (previewPopup.landing && previewJoin.lift < 0.75 && previewJoin.state.neck > 0.9) previewPopup.submerge();", drag)
         # The card slides between icons by its centre, never by `x`: the
         # width grows with the content and a Behavior on x glided the card

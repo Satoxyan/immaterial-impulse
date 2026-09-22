@@ -14,7 +14,7 @@ own repo; the installer pins which revision it builds.
 ### Added
 - Frame mode: the dock's window previews follow the pin grammar. The card is always a floating
   card, but it emerges from the dock's pill - growing out of it, its thumbnails revealed as it
-  grows, lifting off to its gap once grown - slides along the dock as the pointer moves between
+  grows, detaching as it widens past the pill - slides along the dock as the pointer moves between
   icons, and lands on the pill and sinks into it when the pointer leaves. Outside frame mode
   it fades as before.
 
