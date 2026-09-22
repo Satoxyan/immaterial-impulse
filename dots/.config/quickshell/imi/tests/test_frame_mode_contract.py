@@ -651,6 +651,49 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("frameJoined: dockJoin.active && !dockRoot.fullscreenOnThisMonitor", dock)
         self.assertIn("readonly property point surfaceOriginPoint:", dock)
 
+    def test_the_osd_grows_out_of_the_bars_plate(self):
+        # frame-pin-grammar.md, the OSD row: transient, so fused - it grows
+        # out of the bar's plate (the island under its centre, else the band)
+        # and sinks back when it times out; the frame paints it under "osd" by
+        # the same rule the window places itself with (Geo.barInnerEdgeAt).
+        geo = (ROOT / "services/frame_geometry.js").read_text()
+        self.assertIn("function barInnerEdgeAt(joins, edge, along, fallback) {", geo)
+        frame = _strip((ROOT / "modules/imi/frame/Frame.qml").read_text())
+        self.assertIn('if (key === "osd") {', frame)
+        self.assertIn("return Geo.barInnerEdgeAt(surface.joins, edge, along, surface.bandEdgeFor(edge));", frame)
+        self.assertIn('if (key === "osd") return 240;', frame)
+        osd = _strip((ROOT / "modules/imi/onScreenDisplay/OnScreenDisplay.qml").read_text())
+        self.assertIn("readonly property bool joinsFrame: FrameGeometry.popupsJoinBar", osd, "not under M3, whose bar has no plate")
+        self.assertIn("active: root.windowUp", osd, "the window's lifetime is set in order, never bound to the trigger")
+        self.assertIn("} else if (root.joinsFrame && root.windowUp) {\n                root.leaving = true;", osd, "the window outlives the timeout for the sink")
+        self.assertIn("if (root.leaving && osdRoot.openProgress <= 0.001) {\n                        root.leaving = false;\n                        root.windowUp = false;", osd)
+        self.assertIn("const inner = Geo.barInnerEdgeAt(joins, osdRoot.edge, w / 2, band);", osd)
+        self.assertIn("function onFrameJoinsChanged() { Qt.callLater(osdRoot.takeBarInner); }", osd)
+        self.assertIn("left: root.joinsFrame\n                right: root.joinsFrame", osd, "spans the screen, so the card's x is its screen x")
+        self.assertIn("top: root.joinsFrame ? osdRoot.barInner : Appearance.sizes.barHeight", osd)
+        self.assertIn("id: osdJoin", osd)
+        # Attached or Detached (Settings > Appearance > Frame), Detached the
+        # default: the dock preview's phases, fused while it grows, off once
+        # grown or from the first frame when it outgrows the plate's flat.
+        self.assertIn("attached: osdRoot.fusedNow", osd.split("id: osdJoin", 1)[1].split("}", 1)[0])
+        self.assertIn("readonly property bool fusedNow: FrameGeometry.osdAttached ? true", osd)
+        self.assertIn("const necked = !FrameGeometry.osdAttached && osdRoot.willOutgrow ? 0 : grown;", osd)
+        self.assertIn("strokeWidth: Appearance.borderWidth.standard * Math.min(1, osdJoin.lift / Math.max(1, osdJoin.travel)),", osd)
+        self.assertIn('property string osd: "detached"', _strip((ROOT / "modules/common/Config.qml").read_text()))
+        geometry = _strip((ROOT / "services/FrameGeometry.qml").read_text())
+        self.assertIn('readonly property string osdLook: String(Config.options.appearance.frame.osd ?? "detached")', geometry)
+        self.assertIn('readonly property bool osdAttached: root.osdLook === "attached"', geometry)
+        settings = _strip((ROOT / "modules/imi/settings/pages/AppearanceConfig.qml").read_text())
+        self.assertIn('currentValue: Config.options.appearance.frame.osd ?? "detached"', settings)
+        self.assertIn("function barRecordAt(joins, edge, along) {", geo)
+        self.assertIn('GlobalStates.publishFrameJoin(name, "osd", record);', osd)
+        self.assertIn("regionItem: osdRoot.plateOnFrame ? null : (osdIndicatorLoader.item?.backgroundItem ?? null)", osd)
+        self.assertIn("implicitHeight: root.joinsFrame ? Math.max(0, fullHeight * grow) : contentColumnLayout.implicitHeight", osd)
+        for rel in ("modules/imi/onScreenDisplay/OsdValueIndicator.qml", "modules/imi/onScreenDisplay/OsdTextIndicator.qml"):
+            ind = _strip((ROOT / rel).read_text())
+            self.assertIn("property bool plateOnFrame: false", ind, rel)
+            self.assertIn('color: root.plateOnFrame ? "transparent" : Appearance.colors.colLayer0', ind, rel)
+
     def test_the_family_gates_the_surface_on_the_option(self):
         fam = FAMILY.read_text()
         self.assertIn("PanelLoader { extraCondition: FrameGeometry.enabled; component: Frame {} }", fam, "the family agrees with the authority (the vertical bar is not framed)")

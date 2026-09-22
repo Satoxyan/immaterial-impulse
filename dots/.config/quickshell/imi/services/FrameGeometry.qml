@@ -72,6 +72,11 @@ Singleton {
         if (root.barLook === "attached") return true;
         return !pinned && occupied;
     }
+    // How the OSD meets the bar's plate (frame-pin-grammar.md, the OSD row):
+    // "detached" (default) emerges from the plate and lifts off once grown;
+    // "attached" stays fused. Anything else detaches.
+    readonly property string osdLook: String(Config.options.appearance.frame.osd ?? "detached")
+    readonly property bool osdAttached: root.osdLook === "attached"
     readonly property real thickness: Geo.bandThickness(Config.options.appearance.frame.thickness)
     // How the dock meets the band on its edge, given its pin
     // (frame-pin-grammar.md: pinned means released, unpinned means fused).

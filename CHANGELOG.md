@@ -18,6 +18,12 @@ own repo; the installer pins which revision it builds.
   icons, and lands on the pill and sinks into it when the pointer leaves. Outside frame mode
   it fades as before.
 
+- Frame mode: the on-screen display (volume, brightness, caps lock and the rest) grows out of
+  the bar's plate, lifts off it as its own card, and lands and sinks back into it when it
+  times out, instead of appearing and vanishing under the bar. Settings > Appearance > Frame
+  gains an On-screen display row: Detached (that, the default) or Attached (it stays on the
+  plate).
+
 ### Fixed
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty

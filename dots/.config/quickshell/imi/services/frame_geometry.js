@@ -107,6 +107,29 @@ function joinBandEdge(edge, extent, width, height) {
     return (Number(width) || 0) - e;
 }
 
+// The inner edge of whatever bar sits on `edge` in a screen's join records
+// (frame-pin-grammar.md, the bar row): the plate's, or the island's under
+// `along` (a screen x, for a horizontal edge), else `fallback` - the band's
+// own edge, for a bar that is hidden, absent or of a style that publishes no
+// plate. What a card centred on the bar (the OSD) fuses to, read the same way
+// by the frame's painter and by the card's own window.
+function barRecordAt(joins, edge, along) {
+    if (!joins) return null;
+    var b = joins.bar;
+    if (b && b.edge === edge) return b;
+    var keys = ["barIsland:left", "barIsland:center", "barIsland:right"];
+    for (var i = 0; i < keys.length; i++) {
+        var isl = joins[keys[i]];
+        if (isl && isl.edge === edge && along >= isl.plate.x && along <= isl.plate.x + isl.plate.width) return isl;
+    }
+    return null;
+}
+function barInnerEdgeAt(joins, edge, along, fallback) {
+    var r = barRecordAt(joins, edge, along);
+    if (!r) return fallback;
+    return edge === "bottom" ? r.plate.y : r.plate.y + r.plate.height;
+}
+
 // The join records, many per screen (frame-pin-grammar.md §3): a map of
 // screen name to a map of element key ("dock", "barPopup",
 // "notification:<id>") to record. Returns a NEW outer and inner map with

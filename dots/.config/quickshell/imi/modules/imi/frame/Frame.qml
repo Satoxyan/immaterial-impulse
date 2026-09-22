@@ -251,6 +251,14 @@ Scope {
                     // The dock's window-preview card joins the dock's PLATE on
                     // its inner edge, wherever the dock's own lift put it
                     // (frame-pin-grammar.md, the dock preview row).
+                    // The OSD joins the bar's plate, or the island under its
+                    // centre, else the band (Geo.barInnerEdgeAt, the rule the
+                    // OSD's own window places itself by).
+                    if (key === "osd") {
+                        const o = surface.joins.osd ?? null;
+                        const along = o ? o.plate.x + o.plate.width / 2 : surface.width / 2;
+                        return Geo.barInnerEdgeAt(surface.joins, edge, along, surface.bandEdgeFor(edge));
+                    }
                     const d = surface.joins.dock ?? null;
                     if (key === "dockPreview" && d && d.edge === edge)
                         return edge === "bottom" ? d.plate.y : edge === "top" ? d.plate.y + d.plate.height
@@ -279,6 +287,7 @@ Scope {
                 function joinStripDepthFor(key) {
                     if (key === "barPopup") return 720;
                     if (key === "dockPreview") return 480;
+                    if (key === "osd") return 240;
                     if (String(key).startsWith("notification")) return 480;
                     return 160;
                 }
