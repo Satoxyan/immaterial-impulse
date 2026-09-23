@@ -30,6 +30,11 @@ own repo; the installer pins which revision it builds.
   a bar widget popup, the dock's window preview, a notification and the dock - with their own
   corner radii and the released border, in one column; the anisotropic comparison is gone.
 
+- The bar's edge shadow (Settings > Bar, with the background off) adapts to the wallpaper
+  under it: it is dark behind light text and light behind dark text, and only as strong as
+  the strip under the bar needs - nothing where the wallpaper already contrasts, the full
+  shade over a bright sky. Wallpaper Engine scenes are re-read every 15 s.
+
 ### Fixed
 - Frame mode: a floating window no longer turns the bar from Float to Hug unless it comes
   within the bar's space (its zone, its lift and the gap along its edge, touching counts);
