@@ -426,5 +426,8 @@ translucent against the band, it is the band.
   monitor's scale and transform. The dock's Auto follows its pin, but an UNPINNED dock hid for
   any focused window; it hides for a focused window only when that window is in its way, by
   the same rule on its own edge (a tiled one, or a floating one within the dock's strip).
-  Floating windows move without a Hyprland event, so while one is on an active workspace the
-  clients are re-read once a second (HyprlandData.floatingOnActive); none up, the clock is off.
+  A shown special workspace's windows count by their rect too - they never fill the screen,
+  and one over the dock left it up (screenshot); hidden, they do not count at all. Floating
+  windows move without a Hyprland event, so while one is on an active workspace, or a special
+  workspace is shown, the clients are re-read once a second (HyprlandData.floatingOnActive);
+  none up, the clock is off.

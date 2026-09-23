@@ -542,6 +542,7 @@ class FrameModeContract(unittest.TestCase):
         hypr = _strip((ROOT / "services/HyprlandData.qml").read_text())
         self.assertIn("readonly property bool floatingOnActive: root.monitors.some(mon =>", hypr)
         self.assertIn("running: root.floatingOnActive", hypr)
+        self.assertIn("var onActive = w.workspace.id === ws, onSpecial = special !== undefined && w.workspace.id === special;", (ROOT / "services/frame_geometry.js").read_text(), "a shown special workspace's windows count by their rect")
         self.assertIn('readonly property bool barOccupied: FrameGeometry.barOccupiedByMonitorName[barRoot.screen?.name ?? ""] ?? false', barWindow)
         self.assertNotIn("occupiedByMonitorName", _strip((ROOT / "services/HyprlandData.qml").read_text()))
         states = _strip((ROOT / "GlobalStates.qml").read_text())

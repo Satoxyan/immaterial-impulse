@@ -140,6 +140,12 @@ TestCase {
         verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, depth], size: [800, 600] }], mon, "top", depth), "a window whose top edge touches the strip's bottom is in it");
         verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [2500, 300], size: [400, 300] }], mon, "right", 70), "a floating window into the right strip");
         verify(!Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [1000, 300], size: [400, 300] }], mon, "left", 70), "...and not one far from the left");
+        // A shown special workspace's windows count by their rect; hidden, not at all.
+        const shown = Object.assign({}, mon, { specialWorkspace: { id: -98, name: "special:magic" } });
+        const sp = { id: -98, name: "special:magic" };
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: sp, floating: false, at: [400, 300], size: [1700, 1120] }], shown, "bottom", 70), "a special window reaching the bottom strip");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: sp, floating: false, at: [400, 300], size: [1700, 800] }], shown, "bottom", 70), "one short of it does not");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: sp, floating: false, at: [400, 300], size: [1700, 1120] }], mon, "bottom", 70), "a hidden special workspace's window does not count");
     }
 
     function test_join_records_are_a_map_per_screen_that_never_mutates() {

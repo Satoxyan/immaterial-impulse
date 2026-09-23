@@ -129,11 +129,17 @@ function edgeOccupied(windows, monitor, edge, depth) {
         : edge === "left" ? { x: mx, y: my, w: d, h: lh }
         : { x: mx + lw - d, y: my, w: d, h: lh };
     var ws = monitor.activeWorkspace ? monitor.activeWorkspace.id : undefined;
+    // A special workspace's windows, while it is shown: never the whole
+    // screen (they sit in the middle, scaled), so they count by their rect
+    // like a floating window does - one over the dock hides it (screenshot).
+    var special = monitor.specialWorkspace && monitor.specialWorkspace.name ? monitor.specialWorkspace.id : undefined;
     var list = windows || [];
     for (var i = 0; i < list.length; i++) {
         var w = list[i];
-        if (!w || w.monitor !== monitor.id || !w.workspace || w.workspace.id !== ws) continue;
-        if (!w.floating) return true;
+        if (!w || w.monitor !== monitor.id || !w.workspace) continue;
+        var onActive = w.workspace.id === ws, onSpecial = special !== undefined && w.workspace.id === special;
+        if (!onActive && !onSpecial) continue;
+        if (onActive && !w.floating) return true;
         var at = w.at || [0, 0], size = w.size || [0, 0];
         if (at[0] <= strip.x + strip.w && at[0] + size[0] >= strip.x
             && at[1] <= strip.y + strip.h && at[1] + size[1] >= strip.y) return true;

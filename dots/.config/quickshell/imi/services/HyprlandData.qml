@@ -143,7 +143,9 @@ Singleton {
     // edgeOccupied), so while one is up the clients are re-read on a slow
     // clock; none up, the clock is off.
     readonly property bool floatingOnActive: root.monitors.some(mon =>
-        root.windowList.some(w => w.floating && w.monitor === mon.id && w.workspace?.id === mon.activeWorkspace?.id))
+        root.windowList.some(w => w.monitor === mon.id
+            && ((w.floating && w.workspace?.id === mon.activeWorkspace?.id)
+                || ((mon.specialWorkspace?.name ?? "") !== "" && w.workspace?.id === mon.specialWorkspace?.id))))
     Timer {
         interval: 1000
         repeat: true
