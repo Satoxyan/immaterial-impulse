@@ -11,6 +11,8 @@ own repo; the installer pins which revision it builds.
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-09-23
+
 ### Added
 - Frame mode: the dock's window previews follow the pin grammar. The card is always a floating
   card, but it emerges from the dock's pill - growing out of it, its thumbnails revealed as it
@@ -4080,7 +4082,8 @@ illogical-impulse), collecting the work done to date:
   (`Super`+`/`).
 - This changelog and versioning.
 
-[Unreleased]: https://github.com/XephyLon/immaterial-impulse/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/XephyLon/immaterial-impulse/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/XephyLon/immaterial-impulse/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/XephyLon/immaterial-impulse/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/XephyLon/immaterial-impulse/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/XephyLon/immaterial-impulse/compare/v1.1.0...v1.2.0
