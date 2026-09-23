@@ -523,7 +523,6 @@ Item {
         }
         function emerge() {
             previewPopup.landing = false;
-            previewPopup.sinking = false;
             sinkFade.stop();
             previewRowLayout.opacity = 1;
             // Already up (a re-hover that reversed a landing): lift again.
@@ -551,21 +550,13 @@ Item {
             }
             previewPopup.landing = true;
         }
-        // The sink: the thumbnails go with the card - scaled down with it
-        // about the pill's side and fading as they go (the bar popup's
-        // lesson: a clip over a shrinking card cut them, a fade held first
-        // stalled the close).
-        property bool sinking: false
-        property real sinkFromW: 0
-        property real sinkFromH: 0
+        // The sink: the thumbnails vanish in place as the card starts to
+        // collapse - the fast tier, decelerating (the bar popup's lesson: a
+        // clip cut them, a fade held first stalled the close, a scale
+        // squashed them).
         function submerge() {
             previewPopup.landing = false;
-            if (!previewPopup.sinking) {
-                previewPopup.sinkFromW = popupBackground.width;
-                previewPopup.sinkFromH = popupBackground.height;
-                previewPopup.sinking = true;
-                sinkFade.restart();
-            }
+            if (!sinkFade.running) sinkFade.restart();
             previewPopup.openProgress = 0;
         }
         NumberAnimation {
@@ -573,9 +564,9 @@ Item {
             target: previewRowLayout
             property: "opacity"
             to: 0
-            duration: Appearance.animation.elementMoveExit.duration
+            duration: Appearance.animation.elementMoveFast.duration
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
+            easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
         }
         // Landed when the gap is closed and the neck whole, not when the
         // spring has stopped ringing (BarPopupOverlay says why).
@@ -800,7 +791,7 @@ Item {
                     enabled: !root.previewJoinsFrame
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
-                clip: !previewPopup.sinking
+                clip: true
                 // Stood down while the frame paints the plate; the content stays.
                 readonly property bool plateOnFrame: root.previewJoinsFrame && previewJoin.drawsPlate
                 color: plateOnFrame ? "transparent" : Appearance.m3colors.m3surfaceContainer
@@ -848,13 +839,6 @@ Item {
                     y: root.vertical
                         ? (parent.height - height) / 2
                         : (popupMouseArea.dockSide === "bottom" ? parent.height - popupBackground.padding - height : popupBackground.padding)
-                    // Scaled down with the sinking card, about the pill's side.
-                    transform: Scale {
-                        origin.x: root.vertical ? (popupMouseArea.dockSide === "left" ? 0 : previewRowLayout.width) : previewRowLayout.width / 2
-                        origin.y: root.vertical ? previewRowLayout.height / 2 : (popupMouseArea.dockSide === "bottom" ? previewRowLayout.height : 0)
-                        xScale: previewPopup.sinking && previewPopup.sinkFromW > 0 ? popupBackground.width / previewPopup.sinkFromW : 1
-                        yScale: previewPopup.sinking && previewPopup.sinkFromH > 0 ? popupBackground.height / previewPopup.sinkFromH : 1
-                    }
 
                     Repeater {
                         model: ScriptModel {

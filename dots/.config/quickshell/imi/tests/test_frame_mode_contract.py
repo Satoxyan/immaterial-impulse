@@ -736,27 +736,23 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("anchors.margins: overlayWindow.outgoing?.contentPadding ?? 0", overlay.split("id: leaveHost", 1)[1].split("}", 1)[0])
         self.assertRegex(overlay, r"id: contentEnter\s*property Item item: null\s*PauseAnimation \{\s*duration: Appearance\.animation\.elementMoveExit\.duration\s*\}")
 
-    def test_a_leaving_card_takes_its_content_down_with_it(self):
-        # frame-pin-grammar.md §7, the sink: the content goes with the
-        # collapsing card - the host keeps its size and is scaled down with
-        # the card about the band's side, unclipped, fading as it goes - one
-        # motion. A clip over a shrinking host cut the elements (footage); a
-        # fade held first kept them whole but stalled the close (review). The
-        # bar popup, the dock preview and the OSD alike.
+    def test_a_leaving_card_fades_its_content_in_place_as_it_sinks(self):
+        # frame-pin-grammar.md §7, the sink: the content vanishes in place -
+        # the fast tier, decelerating - as the card starts to collapse, one
+        # motion. A clip over a full-strength content cut it (footage); a
+        # fade held first stalled the close; a scale squashed it (review).
+        # The bar popup, the dock preview and the OSD alike.
         overlay = _strip((ROOT / "modules/imi/bar/BarPopupOverlay.qml").read_text())
-        self.assertIn("property bool sinking: false", overlay)
-        self.assertIn("overlayWindow.sinkFromW = card.width;\n                    overlayWindow.sinkFromH = card.height;\n                    overlayWindow.sinking = true;", overlay)
-        host = overlay.split("id: contentHost", 1)[1].split("Item {", 1)[0]
-        self.assertIn("clip: !overlayWindow.sinking", host)
-        self.assertIn("xScale: overlayWindow.sinking && overlayWindow.sinkFromW > 0 ? card.width / overlayWindow.sinkFromW : 1", host)
-        self.assertIn("yScale: overlayWindow.sinking && overlayWindow.sinkFromH > 0 ? card.height / overlayWindow.sinkFromH : 1", host)
+        self.assertNotIn("sinking", overlay)
+        self.assertRegex(overlay, r"id: sinkFade\s*property: \"opacity\"\s*to: 0\s*duration: Appearance\.animation\.elementMoveFast\.duration\s*easing\.type: Easing\.BezierSpline\s*easing\.bezierCurve: Appearance\.animationCurves\.emphasizedDecel")
         self.assertNotIn("onFinished: overlayWindow.sink()", overlay, "nothing waits for the fade")
-        drag = _strip((ROOT / "modules/imi/dock/DragApps.qml").read_text())
-        self.assertIn("clip: !previewPopup.sinking", drag)
-        self.assertIn("xScale: previewPopup.sinking && previewPopup.sinkFromW > 0 ? popupBackground.width / previewPopup.sinkFromW : 1", drag)
-        osd = _strip((ROOT / "modules/imi/onScreenDisplay/OnScreenDisplay.qml").read_text())
-        self.assertIn("clip: !osdRoot.sinking", osd)
-        self.assertIn("xScale: osdRoot.sinking && osdRoot.sinkFromW > 0 ? osdValuesWrapper.width / osdRoot.sinkFromW : 1", osd)
+        host = overlay.split("id: contentHost", 1)[1].split("Item {", 1)[0]
+        self.assertIn("clip: true", host)
+        self.assertNotIn("Scale {", host)
+        for rel in ("modules/imi/dock/DragApps.qml", "modules/imi/onScreenDisplay/OnScreenDisplay.qml"):
+            src = _strip((ROOT / rel).read_text())
+            self.assertNotIn("sinking", src, rel)
+            self.assertRegex(src, r"id: sinkFade\s*target: \w+\s*property: \"opacity\"\s*to: 0\s*duration: Appearance\.animation\.elementMoveFast\.duration", rel)
 
     def test_the_family_gates_the_surface_on_the_option(self):
         fam = FAMILY.read_text()

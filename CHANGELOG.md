@@ -44,9 +44,8 @@ own repo; the installer pins which revision it builds.
 - Moving between bar widgets no longer shows the previous popup's content over the next one:
   the leaving content fades out underneath, without the first-frame jump it had when the
   next popup's padding differed, and the arriving content fades in after it.
-- A bar popup, the dock's window preview and the OSD take their content down with them as they
-  sink back into the frame - scaled and fading with the plate - instead of cropping it as they
-  shrink.
+- A bar popup, the dock's window preview and the OSD fade their content out as they start to
+  sink back into the frame, instead of cropping it as they shrink.
 - Closing a Docker or Discord bar popup could crash the shell at the end of its exit; it no
   longer does.
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.

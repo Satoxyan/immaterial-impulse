@@ -443,14 +443,15 @@ translucent against the band, it is the band.
   become the arriving popup's padding, so the leaving content jumped by the difference on the
   first frame - 16 px from the weather's padding to the calendar's (footage, 60 fps frames).
 - **The sink cropped its content** (footage, 2026-09-23): a bar popup leaving collapsed the card
-  with its content still up, and the clip ate the elements as the card shrank. A first cut faded
-  the content whole and sank the card after - the elements stayed whole, and the close stalled
-  by the fade (review). Now the content goes WITH the card: its host keeps the size it had and
-  is scaled down with the card about the band's side, unclipped, fading on the exit tier as it
-  goes - one motion, nothing held, nothing cut; a re-hover of the leaving widget hands the
-  content back whole. The dock's window preview and the OSD sink the same way. The entrance
-  keeps its reveal: a growing plate uncovering content is the unroll, a shrinking one cutting it
-  is a crop.
+  with its content still up, and the clip ate the elements as the card shrank. Three cuts: the
+  content faded whole and the card sank after - the elements stayed whole, and the close
+  stalled by the fade (review); the content scaled down with the card - no cut, no stall, and
+  the text squashed (review: "somehow worse"); now the content vanishes IN PLACE as the card
+  starts to collapse, on the fast tier with the decelerating curve, so it is mostly gone within
+  the collapse's first frames and the clip has little left to cut - one motion, nothing held,
+  nothing scaled; a re-hover of the leaving widget hands the content back whole. The dock's
+  window preview and the OSD sink the same way. The entrance keeps its reveal: a growing plate
+  uncovering content is the unroll, a shrinking one cutting it is a crop.
 - **A segfault at the end of an exit** (crash report, 2026-09-23 11:25, the Discord popup): the
   overlay's `release()` calls the popup's `aboutToRelease()` before it reparents the content
   (a tray menu once segfaulted the other way round), and the click-only plugins unload their

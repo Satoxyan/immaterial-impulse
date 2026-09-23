@@ -185,7 +185,6 @@ Scope {
                 exitTimer.stop();
                 overlayWindow.landing = false;
                 overlayWindow.exiting = false;
-                overlayWindow.sinking = false;
                 // No opacity or progress write here: retarget() drives the one
                 // scalar, one turn of the event loop from now, and it is the
                 // only place that knows what the card is opening to. Reversing
@@ -463,26 +462,20 @@ Scope {
                 overlayWindow.landing = false;
                 overlayWindow.sink();
             }
-            // The sink: the card collapses toward its widget, and the content
-            // goes WITH it - scaled down with the card about the band's side
-            // (the host below) and fading as it goes - one motion, nothing
-            // held and nothing cut. Fading it first and sinking after kept
-            // the elements whole but stalled the close by the fade (review).
-            property bool sinking: false
-            property real sinkFromW: 0
-            property real sinkFromH: 0
+            // The sink: the card collapses toward its widget and the content
+            // vanishes IN PLACE as it starts - the fast tier, decelerating,
+            // so it is mostly gone within the collapse's first frames and
+            // the clip has little left to cut - one motion, nothing held.
+            // Sunk with the content up, the clip cut the elements (footage);
+            // a fade held first stalled the close; scaled down with the
+            // card, the content squashed (review: "somehow worse").
             function sink() {
                 if (!overlayWindow.exiting) return;
-                if (!overlayWindow.sinking) {
-                    overlayWindow.sinkFromW = card.width;
-                    overlayWindow.sinkFromH = card.height;
-                    overlayWindow.sinking = true;
-                    const content = overlayWindow.current?.contentItem ?? null;
-                    if (content) {
-                        sinkFade.stop();
-                        sinkFade.target = content;
-                        sinkFade.restart();
-                    }
+                const content = overlayWindow.current?.contentItem ?? null;
+                if (content && (sinkFade.target !== content || !sinkFade.running)) {
+                    sinkFade.stop();
+                    sinkFade.target = content;
+                    sinkFade.restart();
                 }
                 const anchor = overlayWindow.anchorAlongBar();
                 if (anchor !== null && anchor !== undefined) card.alongBar = anchor;
@@ -494,9 +487,9 @@ Scope {
                 id: sinkFade
                 property: "opacity"
                 to: 0
-                duration: Appearance.animation.elementMoveExit.duration
+                duration: Appearance.animation.elementMoveFast.duration
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
+                easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
             }
             // The landing is over when the gap is closed and the neck whole,
             // not when the spring has stopped ringing: the last tenth of a
@@ -518,7 +511,6 @@ Scope {
                 contentEnter.stop();
                 contentExit.stop();
                 sinkFade.stop();
-                overlayWindow.sinking = false;
                 // The reset the next entrance starts from, made off screen -
                 // the card collapses in this same call. The exit itself never
                 // touches the sections: they ride the container out at full
@@ -1122,25 +1114,11 @@ Scope {
                     anchors.margins: overlayWindow.outgoing?.contentPadding ?? 0
                     clip: true
                 }
-                // While the card sinks the host keeps the size it had and is
-                // scaled down with the card instead - about the band's side,
-                // so the content goes into the band with the plate - and the
-                // clip is off: a clip over a shrinking host cut the elements
-                // (footage), a scale carries them.
                 Item {
                     id: contentHost
-                    readonly property real pad: overlayWindow.current?.contentPadding ?? 0
-                    x: pad
-                    y: pad
-                    width: Math.max(0, (overlayWindow.sinking ? overlayWindow.sinkFromW : card.width) - 2 * pad)
-                    height: Math.max(0, (overlayWindow.sinking ? overlayWindow.sinkFromH : card.height) - 2 * pad)
-                    clip: !overlayWindow.sinking
-                    transform: Scale {
-                        origin.x: overlayWindow.barVertical && overlayWindow.barEdge === "right" ? contentHost.width : 0
-                        origin.y: !overlayWindow.barVertical && overlayWindow.barEdge === "bottom" ? contentHost.height : 0
-                        xScale: overlayWindow.sinking && overlayWindow.sinkFromW > 0 ? card.width / overlayWindow.sinkFromW : 1
-                        yScale: overlayWindow.sinking && overlayWindow.sinkFromH > 0 ? card.height / overlayWindow.sinkFromH : 1
-                    }
+                    anchors.fill: parent
+                    anchors.margins: overlayWindow.current?.contentPadding ?? 0
+                    clip: true
 
                     // The content's own box, held at the SETTLED height for the
                     // whole unroll and pinned to the top of the host.
@@ -1156,7 +1134,7 @@ Scope {
                     Item {
                         id: contentSlot
                         width: parent.width
-                        height: Math.max(0, (overlayWindow.sinking ? overlayWindow.sinkFromH : card.openHeight)
+                        height: Math.max(0, card.openHeight
                             - 2 * (overlayWindow.current?.contentPadding ?? 0))
                     }
                 }
