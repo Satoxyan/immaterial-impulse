@@ -32,7 +32,7 @@ Settings > Appearance > Frame gets one row per surface to override the default.
 | bar widget popup | click (`StyledPopup.pinnedOpen`, tray menus, Docker/Discord plugins) | released, as today | already pinned | close: swallow into the band, submerge |
 | notification | arrives (`Notifications.popupList`), emerging from its band | fused to the band on its edge (`*_right`, `*_left`; the centre positions stay released) | a **Pin** button, or a drag away from the band past a threshold: releases it and cancels its timeout - it persists. Unpin (the button, or a drag back that ends nearer the band than the pinned rest) fuses it back and restarts its clock | close (the x) or timeout: a released card lands first, then slides into the band. A drag toward the band is never stopped: the join forms with the approach, past the edge the card goes under, and let go there it slides the rest of the way in and closes. Away from the band the pull is elastic to a limit and springs back short of the threshold |
 | dock | reveal at the edge (unpinned) | fused: reveals out of the band and hides back into it | the dock's pin: released, reserves its edge (`DockReservation`) | unpin: lands, fuses; then hides into the band when the pointer leaves |
-| OSD (volume, brightness, locks) | a value changing (`OnScreenDisplay.triggerOsd`) | **Detached** (default, `appearance.frame.osd`): grows out of the bar's plate (the island under its centre, else the band) and lifts off once grown, its own card a gap off the plate; **Attached**: stays fused; the indicator swap keeps its crossfade | none (transient); the setting is the choice | timeout, or the pointer entering it: a detached pill lands first, then sinks into the plate; an attached one sinks |
+| OSD (volume, brightness, locks) | a value changing (`OnScreenDisplay.triggerOsd`) | **Detached** (default, `appearance.frame.osd`): grows out of the bar's plate (the island under its centre, else the band) and lifts off once grown, its own card a gap off the plate; **Attached**: stays fused; the indicator swap keeps its crossfade. A bar with no plate (background off): released, from the bar's zone edge, no meniscus | none (transient); the setting is the choice | timeout, or the pointer entering it: a detached pill lands first, then sinks into the plate; an attached one sinks |
 | dock window preview | hovering a dock icon (`DragApps.previewPopup`) | released - always floating - but it **emerges from the pill**: a join on the dock's plate (`dockPreview`), growing out of the pill from a parked square; a card that fits the pill's flat grows fused and lifts off once grown, one that will outgrow it lifts from the first frame, so the drop emerges and detaches in one motion; slides along the dock between icons | none (never pinned) | pointer leaving: lands on the pill, then sinks into it |
 | bar | always on | Plate style: **Hug** (fused to the hairline band on its edge) while a window is on the monitor's active workspace - the frame is the border around the windows - and **Float** (lifted by the compositor's gap from the band's inner edge, inset from the side bands by the same, corners rounding with the lift) over an empty workspace (`FrameGeometry.barAttachedFor`; the Bar state row / `appearance.frame.bar` "auto"/"attached"/"floating"). Islands follow the same state, each on its own; M3 only floats | `bar togglePin` over IPC (`GlobalStates.barPinned`): pinned is released whatever the workspace holds; unpin returns to the workspace rule | released, the bar reserves its lift as well (the dock's flip rule: once per state change, on the compositor's own animation), so windows make room and the island has its gap on every side; bar popups fuse to the plate's inner edge wherever the lift put it; auto-hide in frame mode is still a split (out of scope, frame-one-surface.md §7) |
 
@@ -410,6 +410,19 @@ translucent against the band, it is the band.
   (`windowUp`), never a binding on the trigger: bound, the Loader re-evaluated on the very
   signal that was to set `leaving` inside the window and destroyed it first - the pill vanished
   in one frame instead of sinking (burst).
+- **A bar with no plate** (footage, 2026-09-23 15:53): the reviewer's bar has its background off,
+  and `popupsJoinBar` read "the frame paints the bar's plate or its islands" - false there, so
+  the OSD and the bar's popups took the old surfaces: the OSD popped in fully formed, and on its
+  exit the plate and the frost went in one frame while the indicator lingered. The join is the
+  bar's, not the plate's: Plate or Islands, background or not, the popups and the OSD join the
+  bar's ZONE edge (`barThickness` from the screen edge, where the plate's inner edge would be)
+  as released cards, `barPlateless` in the authority; Frame.qml's and the OSD's fallbacks name
+  that edge instead of the 2 px hairline, and the records carry no neck, there being nothing to
+  fuse to. And a released card in frame mode now EMERGES like the dock preview and the OSD
+  (`emerging`: attached while the growth runs, released when it arrives at 0.97) instead of
+  unrolling from its parked square - the same phases in every surface, whichever way it ends
+  up. `qs -c imi ipc call frame geometry` and `frame joins <screen>` are the diagnosis that
+  found it. Float keeps its own inset plate and stays out; M3 its own popups.
 - **The pause before the lift** (footage, 2026-09-23, 30 fps frames): the OSD grew in about
   170 ms, sat fully grown for 280 ms, then lifted. The release waited for the growth's
   animation to END, and the spatial tier's curve has the pill at full size a third of the way in

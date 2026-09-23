@@ -238,14 +238,18 @@ Scope {
             // the band (Geo.barInnerEdgeAt - the frame paints by the same
             // rule). Taken up from the event loop, never bound: this window
             // publishes its own record into the same map.
-            property real barInner: FrameGeometry.bandExtent(osdRoot.edge)
+            // ...or, for a bar with no plate (its background off), the bar's
+            // zone edge, where the OSD emerges as a drop with no meniscus.
+            readonly property real bandFallback: FrameGeometry.barPlateless && osdRoot.edge === FrameGeometry.barEdge
+                ? FrameGeometry.barThickness : FrameGeometry.bandExtent(osdRoot.edge)
+            property real barInner: osdRoot.bandFallback
             // The plate's flat along the bar, between its corner radii;
             // boundless where the OSD joins the band.
             property real barFlat: 1e9
             function takeBarInner() {
                 const joins = GlobalStates.frameJoins[osdRoot.screen?.name ?? ""] ?? null;
                 const w = osdRoot.screen?.width ?? 0, h = osdRoot.screen?.height ?? 0;
-                const band = Geo.joinBandEdge(osdRoot.edge, FrameGeometry.bandExtent(osdRoot.edge), w, h);
+                const band = Geo.joinBandEdge(osdRoot.edge, osdRoot.bandFallback, w, h);
                 const inner = Geo.barInnerEdgeAt(joins, osdRoot.edge, w / 2, band);
                 const fromEdge = osdRoot.bottom ? h - inner : inner;
                 if (Math.abs(fromEdge - osdRoot.barInner) > 0.01) osdRoot.barInner = fromEdge;
@@ -383,7 +387,7 @@ Scope {
                 // No meniscus for a pill that outgrows the plate (the dock
                 // preview's rule): released from its first frame, it was
                 // never fused.
-                const necked = !FrameGeometry.osdAttached && osdRoot.willOutgrow ? 0 : grown;
+                const necked = (!FrameGeometry.osdAttached && osdRoot.willOutgrow) || FrameGeometry.barPlateless ? 0 : grown;
                 return {
                     edge: osdRoot.edge,
                     plate: { x: at.x, y: at.y + oy + (osdRoot.bottom ? osdValuesWrapper.height - h : 0), width: osdValuesWrapper.width, height: h },

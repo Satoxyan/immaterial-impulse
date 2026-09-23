@@ -11,6 +11,16 @@ own repo; the installer pins which revision it builds.
 
 ## [Unreleased]
 
+### Fixed
+- Frame mode: a bar with its background off (Settings > Bar > Show background) left the bar's
+  popups and the on-screen display out of the frame's motion - they popped in fully formed, and
+  the OSD's frost and plate vanished in the first frame of its exit while its text lingered. They
+  now join the bar's edge as their own cards, background or not: emerging from it, lifting off
+  once grown, landing and sinking back into it. Frame widget popups that open as their own card
+  emerge the same way instead of unrolling from a parked square.
+- `qs -c imi ipc call frame geometry` and `frame joins <screen>` report the frame's geometry and
+  a screen's live join records, for diagnosing a surface that will not join.
+
 ## [1.4.0] — 2026-09-23
 
 ### Added

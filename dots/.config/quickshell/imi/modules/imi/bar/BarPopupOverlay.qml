@@ -298,6 +298,7 @@ Scope {
                 popup.popupHovered = cardHover.hovered;
 
                 if (fresh) {
+                    overlayWindow.emerging = overlayWindow.joinsFrame;
                     overlayWindow.park();
                     // A fresh open arms the wave: the sections below the fold
                     // are put away before the card is on screen, and the gate
@@ -439,6 +440,7 @@ Scope {
                 // becomes the parked square's here, and at progress 1 that
                 // changes nothing, so the exit starts where the card already is.
                 overlayWindow.exiting = true;
+                overlayWindow.emerging = false;
                 if (overlayWindow.current?.contentItem)
                     overlayWindow.current.contentItem.enabled = false;
                 // A released card lands FIRST, then submerges (the grammar's
@@ -852,10 +854,15 @@ Scope {
             onBarThicknessChanged: overlayWindow.takeBarInner()
             readonly property string popupsLook: String(Config.options.appearance.frame.popups ?? "auto")
             readonly property bool wantsFused: overlayWindow.popupsLook === "fused"
-                || (overlayWindow.popupsLook === "auto" && !(overlayWindow.current?.pinnedOpen ?? false))
+                || (overlayWindow.popupsLook === "auto" && !(overlayWindow.current?.pinnedOpen ?? false) && !FrameGeometry.barPlateless)
             // ...and on the way out whatever it was: a released card lands
             // and swallows into the band before it submerges.
-            readonly property bool joinAttached: !overlayWindow.joinsFrame || overlayWindow.wantsFused || overlayWindow.exiting
+            // A released card still EMERGES: a fresh open grows out of the
+            // band fused (the dock preview's, the OSD's phases) and lifts off
+            // when the growth arrives - one motion, the frame's own, where a
+            // released card used to unroll from its parked square as before.
+            property bool emerging: false
+            readonly property bool joinAttached: !overlayWindow.joinsFrame || overlayWindow.wantsFused || overlayWindow.exiting || overlayWindow.emerging
             readonly property bool cardFused: overlayWindow.joinsFrame && overlayWindow.joinAttached
             FrameJoin {
                 id: cardJoin
@@ -900,8 +907,10 @@ Scope {
                              bottomRight: bottom ? heldR : card.radius,
                              bottomLeft: bottom ? heldL : card.radius },
                     gap: cardJoin.state.gap,
-                    neck: overlayWindow.cardOverhangs ? 0 : cardJoin.state.neck * grown,
-                    bulge: overlayWindow.cardOverhangs ? 0 : cardJoin.state.bulge * grown,
+                    // No meniscus where there is nothing to fuse to: a card
+                    // wider than its island, or a bar with no plate.
+                    neck: overlayWindow.cardOverhangs || FrameGeometry.barPlateless ? 0 : cardJoin.state.neck * grown,
+                    bulge: overlayWindow.cardOverhangs || FrameGeometry.barPlateless ? 0 : cardJoin.state.bulge * grown,
                     meniscus: cardJoin.meniscus, blendPerPixel: cardJoin.blendPerPixel,
                     climbFraction: cardJoin.climbFraction, color: overlayWindow.platePaint,
                     // The released card's border, fading in with the lift.
@@ -983,6 +992,10 @@ Scope {
                 // and the one place they would visibly differ is mid-flight,
                 // which is the only place nobody looks.
                 property real openProgress: 0
+                // The growth's arrival ends the emergence: a released card
+                // lifts off from here (the OSD's lesson: the animation's END
+                // came 280 ms after the card looked grown).
+                onOpenProgressChanged: if (overlayWindow.emerging && card.openProgress >= 0.97) overlayWindow.emerging = false
                 // What the card unrolls between. Assigned by retarget(), which
                 // is a turn of the event loop behind the takeover because an
                 // unparented tree does not polish and its implicit size is

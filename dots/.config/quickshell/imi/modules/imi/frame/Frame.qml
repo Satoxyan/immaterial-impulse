@@ -263,6 +263,12 @@ Scope {
                 function joinBandEdgeFor(key, edge) {
                     const b = surface.barRecord;
                     if (key === "barPopup" && b && b.edge === edge) return surface.barInnerEdge;
+                    // A bar with no plate to join (its background off): the
+                    // popups and the OSD join its zone's edge instead of the
+                    // hairline behind its widgets.
+                    const zone = edge === FrameGeometry.barEdge && FrameGeometry.barPlateless
+                        ? Geo.joinBandEdge(edge, FrameGeometry.barThickness, surface.width, surface.height)
+                        : surface.bandEdgeFor(edge);
                     // The dock's window-preview card joins the dock's PLATE on
                     // its inner edge, wherever the dock's own lift put it
                     // (frame-pin-grammar.md, the dock preview row).
@@ -272,7 +278,7 @@ Scope {
                     if (key === "osd") {
                         const o = surface.joins.osd ?? null;
                         const along = o ? o.plate.x + o.plate.width / 2 : surface.width / 2;
-                        return Geo.barInnerEdgeAt(surface.joins, edge, along, surface.bandEdgeFor(edge));
+                        return Geo.barInnerEdgeAt(surface.joins, edge, along, zone);
                     }
                     const d = surface.joins.dock ?? null;
                     if (key === "dockPreview" && d && d.edge === edge)
@@ -284,6 +290,7 @@ Scope {
                     const pop = surface.joins.barPopup ?? null;
                     const isl = key === "barPopup" && pop && pop.section ? (surface.joins["barIsland:" + pop.section] ?? null) : null;
                     if (isl) return edge === "bottom" ? isl.plate.y : isl.plate.y + isl.plate.height;
+                    if (key === "barPopup") return zone;
                     const band = surface.bandEdgeFor(edge);
                     if (key === "bar" && b && b.edge === edge)
                         return edge === "bottom" ? Math.max(band, surface.barInnerEdge) : Math.min(band, surface.barInnerEdge);

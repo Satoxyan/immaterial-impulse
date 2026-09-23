@@ -41,11 +41,22 @@ Singleton {
     // The Islands style with painted islands: each section its own plate.
     readonly property bool barIslands: (Config.options.bar.cornerStyle ?? 0) === 4
         && (Config.options.bar.showBackground ?? true)
-    // Whether a bar widget's popup joins the bar (frame-pin-grammar.md): where
-    // the frame paints the bar's plate the popup fuses to it; where the bar is
-    // islands the popup fuses to its section's island - the island the drop,
-    // the popup's edge the pond, since the island is the narrower of the two.
-    readonly property bool popupsJoinBar: root.enabled && (root.barCovers || root.barIslands)
+    // Whether the bar publishes a plate to join (its plate record, or its
+    // islands'); a bar with its background off has none.
+    readonly property bool barPlate: root.barCovers || root.barIslands
+    // Whether a bar widget's popup and the OSD join the bar (frame-pin-
+    // grammar.md): where the frame paints the bar's plate the popup fuses to
+    // it; where the bar is islands the popup fuses to its section's island -
+    // the island the drop, the popup's edge the pond, since the island is the
+    // narrower of the two. Plate or Islands, background or not: with the
+    // background off (a transparent bar, review) they used to fall back to
+    // the old surfaces - popping in, vanishing - and the frame's design
+    // language stopped at the bar. Plateless, they join the bar's ZONE edge
+    // (barPlateless: Frame.qml's fallback, the OSD's) as released cards that
+    // emerge from it as drops, with no meniscus - there is nothing to fuse
+    // to. Float still draws its own inset plate and M3 its own popups.
+    readonly property bool popupsJoinBar: root.enabled && [0, 4].includes(Number(Config.options.bar.cornerStyle ?? 0))
+    readonly property bool barPlateless: root.popupsJoinBar && !root.barPlate
     // Whether the FRAME's surface paints the bar's plate (frame-one-surface.md
     // stage 3, frame-pin-grammar.md the bar row): only where the bar is the
     // frame's edge - a covering plate - because there the plate is a
