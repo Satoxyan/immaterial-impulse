@@ -24,6 +24,12 @@ own repo; the installer pins which revision it builds.
   gains an On-screen display row: Detached (that, the default) or Attached (it stays on the
   plate).
 
+### Changed
+- Developer mode: the cheatsheet's Frame join tab (and `qs -p bench_frame_join.qml`) shows
+  every surface that joins the frame at true size - the bar's plate and an island, the OSD,
+  a bar widget popup, the dock's window preview, a notification and the dock - with their own
+  corner radii and the released border, in one column; the anisotropic comparison is gone.
+
 ### Fixed
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
