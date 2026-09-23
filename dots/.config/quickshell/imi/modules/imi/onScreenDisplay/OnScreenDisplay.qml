@@ -287,12 +287,14 @@ Scope {
                     if (!root.joinsFrame) return;
                     if (GlobalStates.osdVolumeOpen) {
                         osdRoot.landing = false;
+                        sinkFade.stop();
+                        contentColumnLayout.opacity = 1;
                         osdRoot.openDone = osdRoot.openProgress >= 0.999 && osdValuesWrapper.height > 0;
                         osdRoot.openProgress = 1;
                         return;
                     }
                     osdRoot.openDone = false;
-                    if (FrameGeometry.osdAttached || osdRoot.willOutgrow || osdJoin.lift <= 0.5) osdRoot.openProgress = 0;
+                    if (FrameGeometry.osdAttached || osdRoot.willOutgrow || osdJoin.lift <= 0.5) osdRoot.sink();
                     else osdRoot.landing = true;
                 }
             }
@@ -320,11 +322,32 @@ Scope {
             Connections {
                 target: osdJoin
                 function onStateChanged() {
-                    if (osdRoot.landing && osdJoin.lift < 0.75 && osdJoin.state.neck > 0.9) { osdRoot.landing = false; osdRoot.openProgress = 0; }
+                    if (osdRoot.landing && osdJoin.lift < 0.75 && osdJoin.state.neck > 0.9) { osdRoot.landing = false; osdRoot.sink(); }
                 }
                 function onMovingChanged() {
-                    if (!osdJoin.moving && osdRoot.landing) { osdRoot.landing = false; osdRoot.openProgress = 0; }
+                    if (!osdJoin.moving && osdRoot.landing) { osdRoot.landing = false; osdRoot.sink(); }
                 }
+            }
+            // The content fades out whole first, at the size it has, and
+            // then the pill sinks: sunk with its content up, the collapsing
+            // pill cropped it as it went (the bar popup's lesson).
+            function sink() {
+                if (GlobalStates.osdVolumeOpen) return;
+                if (contentColumnLayout.opacity > 0.01) {
+                    if (!sinkFade.running) sinkFade.restart();
+                    return;
+                }
+                osdRoot.openProgress = 0;
+            }
+            NumberAnimation {
+                id: sinkFade
+                target: contentColumnLayout
+                property: "opacity"
+                to: 0
+                duration: Appearance.animation.elementMoveExit.duration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
+                onFinished: if (!GlobalStates.osdVolumeOpen) osdRoot.openProgress = 0
             }
             Component.onCompleted: {
                 osdRoot.takeBarInner();

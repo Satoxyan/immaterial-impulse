@@ -197,6 +197,9 @@ Scope {
                     overlayWindow.current.contentItem.enabled = true;
 
                 if (overlayWindow.current === popup) {
+                    // ...and its content, if the sink's fade had started.
+                    sinkFade.stop();
+                    if (popup.contentItem) popup.contentItem.opacity = 1;
                     retargetTimer.restart();
                     return;
                 }
@@ -449,16 +452,42 @@ Scope {
                 }
                 overlayWindow.submerge();
             }
-            // The exit's second half: the card sinks into the band it sits on.
+            // The exit's second half: the content fades out WHOLE, at the size
+            // it has, and then the card sinks into the band it sits on. Sunk
+            // with its content still up, the collapsing card cropped the
+            // elements inside it as it went (footage) - a fade first is what
+            // leaves the motion one piece.
             property bool landing: false
             function submerge() {
                 overlayWindow.landing = false;
+                if (!overlayWindow.exiting) return;
+                const content = overlayWindow.current?.contentItem ?? null;
+                if (content && content.opacity > 0.01) {
+                    if (sinkFade.target !== content || !sinkFade.running) {
+                        sinkFade.stop();
+                        sinkFade.target = content;
+                        sinkFade.restart();
+                    }
+                    return;
+                }
+                overlayWindow.sink();
+            }
+            function sink() {
                 if (!overlayWindow.exiting) return;
                 const anchor = overlayWindow.anchorAlongBar();
                 if (anchor !== null && anchor !== undefined) card.alongBar = anchor;
                 card.width = card.parkedSize;
                 card.openProgress = 0;
                 exitTimer.restart();
+            }
+            NumberAnimation {
+                id: sinkFade
+                property: "opacity"
+                to: 0
+                duration: Appearance.animation.elementMoveExit.duration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
+                onFinished: overlayWindow.sink()
             }
             // The landing is over when the gap is closed and the neck whole,
             // not when the spring has stopped ringing: the last tenth of a
@@ -479,6 +508,7 @@ Scope {
                 exitTimer.stop();
                 contentEnter.stop();
                 contentExit.stop();
+                sinkFade.stop();
                 // The reset the next entrance starts from, made off screen -
                 // the card collapses in this same call. The exit itself never
                 // touches the sections: they ride the container out at full

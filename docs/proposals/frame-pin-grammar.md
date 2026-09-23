@@ -442,3 +442,10 @@ translucent against the band, it is the band.
   inset by the LEAVING popup's padding): in the arriving tree's host the margins had already
   become the arriving popup's padding, so the leaving content jumped by the difference on the
   first frame - 16 px from the weather's padding to the calendar's (footage, 60 fps frames).
+- **The sink cropped its content** (footage, 2026-09-23): a bar popup leaving collapsed the card
+  with its content still up, and the clip ate the elements as the card shrank. The content
+  fades out WHOLE first, at the size it has (the exit tier), and only then does the card sink;
+  a re-hover of the leaving widget stops the fade and hands the content back whole. The dock's
+  window preview and the OSD sink the same way - their thumbnails and indicator fade, then the
+  plate goes. The entrance keeps its reveal: a growing plate uncovering content is the unroll,
+  a shrinking one cutting it is a crop.

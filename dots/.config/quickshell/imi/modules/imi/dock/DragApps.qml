@@ -523,6 +523,8 @@ Item {
         }
         function emerge() {
             previewPopup.landing = false;
+            sinkFade.stop();
+            previewRowLayout.opacity = 1;
             // Already up (a re-hover that reversed a landing): lift again.
             previewPopup.openDone = previewPopup.openProgress >= 0.999 && popupBackground.height > 0;
             previewPopup.openProgress = 1;
@@ -548,9 +550,26 @@ Item {
             }
             previewPopup.landing = true;
         }
+        // The content fades out whole first, at the size it has, and then
+        // the card sinks: sunk with its thumbnails still up, the collapsing
+        // card cropped them as it went (the bar popup's lesson).
         function submerge() {
             previewPopup.landing = false;
+            if (previewRowLayout.opacity > 0.01 && !previewPopup.show) {
+                if (!sinkFade.running) sinkFade.restart();
+                return;
+            }
             previewPopup.openProgress = 0;
+        }
+        NumberAnimation {
+            id: sinkFade
+            target: previewRowLayout
+            property: "opacity"
+            to: 0
+            duration: Appearance.animation.elementMoveExit.duration
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
+            onFinished: if (!previewPopup.show) previewPopup.openProgress = 0
         }
         // Landed when the gap is closed and the neck whole, not when the
         // spring has stopped ringing (BarPopupOverlay says why).

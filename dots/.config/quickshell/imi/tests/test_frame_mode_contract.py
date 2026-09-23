@@ -732,6 +732,26 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("anchors.margins: overlayWindow.outgoing?.contentPadding ?? 0", overlay.split("id: leaveHost", 1)[1].split("}", 1)[0])
         self.assertRegex(overlay, r"id: contentEnter\s*property Item item: null\s*PauseAnimation \{\s*duration: Appearance\.animation\.elementMoveExit\.duration\s*\}")
 
+    def test_a_leaving_card_fades_its_content_before_it_sinks(self):
+        # frame-pin-grammar.md §7, the sink: the content fades out whole, at
+        # the size it has, and only then does the card collapse into the
+        # band - sunk with its content up, the collapsing card cropped the
+        # elements inside it (footage). The bar popup, the dock preview and
+        # the OSD alike.
+        overlay = _strip((ROOT / "modules/imi/bar/BarPopupOverlay.qml").read_text())
+        self.assertIn("function sink() {", overlay)
+        self.assertIn("if (content && content.opacity > 0.01) {", overlay)
+        self.assertRegex(overlay, r"id: sinkFade\s*property: \"opacity\"\s*to: 0\s*duration: Appearance\.animation\.elementMoveExit\.duration")
+        self.assertIn("onFinished: overlayWindow.sink()", overlay)
+        self.assertIn("sinkFade.stop();\n                    if (popup.contentItem) popup.contentItem.opacity = 1;", overlay, "a re-hover of the leaving widget hands its content back whole")
+        drag = _strip((ROOT / "modules/imi/dock/DragApps.qml").read_text())
+        self.assertIn("if (previewRowLayout.opacity > 0.01 && !previewPopup.show) {", drag)
+        self.assertIn("onFinished: if (!previewPopup.show) previewPopup.openProgress = 0", drag)
+        osd = _strip((ROOT / "modules/imi/onScreenDisplay/OnScreenDisplay.qml").read_text())
+        self.assertIn("function sink() {", osd)
+        self.assertIn("if (contentColumnLayout.opacity > 0.01) {", osd)
+        self.assertIn("onFinished: if (!GlobalStates.osdVolumeOpen) osdRoot.openProgress = 0", osd)
+
     def test_the_family_gates_the_surface_on_the_option(self):
         fam = FAMILY.read_text()
         self.assertIn("PanelLoader { extraCondition: FrameGeometry.enabled; component: Frame {} }", fam, "the family agrees with the authority (the vertical bar is not framed)")
