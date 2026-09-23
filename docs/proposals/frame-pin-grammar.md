@@ -416,3 +416,10 @@ translucent against the band, it is the band.
   and spends the rest settling. The OSD and the dock preview now release when the growth
   ARRIVES - `openProgress` first crossing 0.97 - with the animation's end kept as the fallback;
   the lift starts while the growth settles its last pixels, one motion.
+- **A floating window does not turn the bar** (review, 2026-09-23): Auto hugged for any window
+  on the active workspace, floating ones included, so a calculator in the middle of the screen
+  turned the frame's border on. The bar hugs for a tiled window, or a floating one within its
+  strip - its zone and the gap along its edge (`Geo.barOccupied`, mapped per monitor by
+  `FrameGeometry.barOccupiedByMonitorName`; the strip is measured in logical pixels under the
+  monitor's scale and transform). The dock's Auto follows its pin, not the windows, so it has
+  nothing to turn.

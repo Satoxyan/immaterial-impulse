@@ -525,7 +525,15 @@ class FrameModeContract(unittest.TestCase):
         popup_room = _strip((ROOT / "modules/imi/notificationPopup/NotificationPopup.qml").read_text())
         self.assertIn('joins.bar ?? joins["barIsland:left"] ?? joins["barIsland:center"] ?? joins["barIsland:right"] ?? null', popup_room, "the islands carry the released bar's zone too")
         self.assertIn("const extra = barRecord?.zoneExtra ?? 0", popup_room)
-        self.assertIn("readonly property var occupiedByMonitorName:", _strip((ROOT / "services/HyprlandData.qml").read_text()))
+        # The bar hugs for a tiled window, or a floating one within its strip
+        # (the zone and the gap); a floating window elsewhere leaves it
+        # (review). The rule is Geo.barOccupied, mapped per monitor by the
+        # frame authority; the old any-window map is gone.
+        self.assertIn("function barOccupied(windows, monitor, edge, depth) {", (ROOT / "services/frame_geometry.js").read_text())
+        self.assertIn("readonly property var barOccupiedByMonitorName:", geometry_src := _strip((ROOT / "services/FrameGeometry.qml").read_text()))
+        self.assertIn("out[mon.name] = Geo.barOccupied(HyprlandData.windowList, mon, root.barEdge, depth);", geometry_src)
+        self.assertIn('readonly property bool barOccupied: FrameGeometry.barOccupiedByMonitorName[barRoot.screen?.name ?? ""] ?? false', barWindow)
+        self.assertNotIn("occupiedByMonitorName", _strip((ROOT / "services/HyprlandData.qml").read_text()))
         states = _strip((ROOT / "GlobalStates.qml").read_text())
         self.assertIn("property bool barPinned: false", states)
         self.assertNotIn("frameBars", states)

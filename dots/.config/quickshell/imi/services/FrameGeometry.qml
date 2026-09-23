@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 
 import qs.modules.common
+import qs.services
 import "frame_geometry.js" as Geo
 
 /**
@@ -67,6 +68,18 @@ Singleton {
     // "floating" force one look. The pin and the occupancy are the bar's
     // facts, handed in.
     readonly property string barLook: String(Config.options.appearance.frame.bar ?? "auto")
+    // Whether the bar has a window to hug for, per monitor (Geo.barOccupied):
+    // a tiled window on the active workspace, or a floating one within the
+    // bar's strip - its zone and the gap. A floating window elsewhere on the
+    // screen does not turn the bar (review: "a floating window should not
+    // toggle the attached state unless it came within their spaces").
+    readonly property var barOccupiedByMonitorName: {
+        const out = ({});
+        const depth = root.barThickness + root.gap;
+        for (const mon of HyprlandData.monitors)
+            out[mon.name] = Geo.barOccupied(HyprlandData.windowList, mon, root.barEdge, depth);
+        return out;
+    }
     function barAttachedFor(pinned: bool, occupied: bool): bool {
         if (root.barLook === "floating") return false;
         if (root.barLook === "attached") return true;

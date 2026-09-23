@@ -31,6 +31,8 @@ own repo; the installer pins which revision it builds.
   corner radii and the released border, in one column; the anisotropic comparison is gone.
 
 ### Fixed
+- Frame mode: a floating window no longer turns the bar from Float to Hug unless it comes
+  within the bar's space (its zone and the gap along its edge); tiled windows still do.
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
   and fills in afterwards; its content is revealed by the plate as it grows.
