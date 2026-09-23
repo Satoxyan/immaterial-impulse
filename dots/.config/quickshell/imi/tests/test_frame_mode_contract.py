@@ -723,8 +723,13 @@ class FrameModeContract(unittest.TestCase):
         # to end - for four frames both texts were legible, the weather at
         # full strength over the calendar (footage).
         overlay = _strip((ROOT / "modules/imi/bar/BarPopupOverlay.qml").read_text())
-        self.assertIn("leaving.z = -1;", overlay)
-        self.assertIn("content.z = 0;", overlay, "released, a tree is stacked plainly again")
+        # ...in its own host, declared before (under) the arriving tree's and
+        # inset by the LEAVING popup's padding: the arriving host's margins
+        # had already become the arriving popup's padding, so the leaving
+        # content jumped by the difference on the first frame (footage).
+        self.assertIn("leaving.parent = leaveHost;", overlay)
+        self.assertLess(overlay.index("id: leaveHost"), overlay.index("id: contentHost"))
+        self.assertIn("anchors.margins: overlayWindow.outgoing?.contentPadding ?? 0", overlay.split("id: leaveHost", 1)[1].split("}", 1)[0])
         self.assertRegex(overlay, r"id: contentEnter\s*property Item item: null\s*PauseAnimation \{\s*duration: Appearance\.animation\.elementMoveExit\.duration\s*\}")
 
     def test_the_family_gates_the_surface_on_the_option(self):

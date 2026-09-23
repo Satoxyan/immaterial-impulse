@@ -243,16 +243,20 @@ Scope {
                     // (footage: weather to calendar). Pinned to the host's
                     // top-left it keeps the top the user was reading and the
                     // card's edge covers it from below and from the right.
+                    // ...in its OWN host, under the arriving tree's and with
+                    // the leaving popup's padding: in the arriving tree's host
+                    // it stacked on top (reparented last) and drew at full
+                    // strength over the one the pointer had moved to for the
+                    // first frames (footage: weather over calendar), and the
+                    // host's margins had already become the arriving popup's
+                    // padding, so the leaving content jumped by the difference
+                    // on the first frame - 16 px, weather to calendar
+                    // (footage). Same top-left, same padding, no jump.
                     const leaving = previous.contentItem;
                     leaving.anchors.centerIn = null;
-                    leaving.parent = contentHost;
-                    leaving.anchors.top = contentHost.top;
-                    leaving.anchors.left = contentHost.left;
-                    // UNDER the arriving tree: reparented last it stacked on
-                    // top, and for the first frames of a takeover the leaving
-                    // popup drew at full strength over the one the pointer
-                    // had moved to (footage: weather over calendar).
-                    leaving.z = -1;
+                    leaving.parent = leaveHost;
+                    leaving.anchors.top = leaveHost.top;
+                    leaving.anchors.left = leaveHost.left;
                     contentExit.target = leaving;
                     contentExit.restart();
                 }
@@ -520,7 +524,6 @@ Scope {
                     content.anchors.centerIn = null;
                     content.anchors.top = undefined;
                     content.anchors.left = undefined;
-                    content.z = 0;
                     content.parent = null;
                     content.opacity = 1;
                     content.enabled = true;
@@ -1071,6 +1074,14 @@ Scope {
                 // paint outside the card's rounded body. Content is inset by
                 // contentPadding on every side, so the rectangular clip never
                 // reaches the corner radii.
+                // The leaving tree's host: under the arriving tree's, inset by
+                // the LEAVING popup's padding, clipped the same way.
+                Item {
+                    id: leaveHost
+                    anchors.fill: parent
+                    anchors.margins: overlayWindow.outgoing?.contentPadding ?? 0
+                    clip: true
+                }
                 Item {
                     id: contentHost
                     anchors.fill: parent

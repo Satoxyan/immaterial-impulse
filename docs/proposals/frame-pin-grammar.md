@@ -438,4 +438,7 @@ translucent against the band, it is the band.
   spatial tier less the enter tier), while the leaving fade had 200 ms to run. Now the leaving
   tree goes under (`z: -1`, reset on release) and the arriving fade waits the leaving fade's
   whole length, so the two are never both legible; the card's move keeps its own tier under
-  both.
+  both. And the leaving tree has its own host (`leaveHost`, declared under the arriving tree's,
+  inset by the LEAVING popup's padding): in the arriving tree's host the margins had already
+  become the arriving popup's padding, so the leaving content jumped by the difference on the
+  first frame - 16 px from the weather's padding to the calendar's (footage, 60 fps frames).
