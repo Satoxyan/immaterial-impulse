@@ -717,6 +717,16 @@ class FrameModeContract(unittest.TestCase):
             self.assertIn("property bool plateOnFrame: false", ind, rel)
             self.assertIn('color: root.plateOnFrame ? "transparent" : Appearance.colors.colLayer0', ind, rel)
 
+    def test_a_takeover_never_shows_both_contents_at_once(self):
+        # frame-pin-grammar.md §7, the takeover: the leaving tree sits UNDER
+        # the arriving one, and the arriving fade waits for the leaving fade
+        # to end - for four frames both texts were legible, the weather at
+        # full strength over the calendar (footage).
+        overlay = _strip((ROOT / "modules/imi/bar/BarPopupOverlay.qml").read_text())
+        self.assertIn("leaving.z = -1;", overlay)
+        self.assertIn("content.z = 0;", overlay, "released, a tree is stacked plainly again")
+        self.assertRegex(overlay, r"id: contentEnter\s*property Item item: null\s*PauseAnimation \{\s*duration: Appearance\.animation\.elementMoveExit\.duration\s*\}")
+
     def test_the_family_gates_the_surface_on_the_option(self):
         fam = FAMILY.read_text()
         self.assertIn("PanelLoader { extraCondition: FrameGeometry.enabled; component: Frame {} }", fam, "the family agrees with the authority (the vertical bar is not framed)")

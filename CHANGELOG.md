@@ -41,6 +41,8 @@ own repo; the installer pins which revision it builds.
   tiled windows still do. An unpinned dock no longer hides for a focused floating window
   that is nowhere near it; it hides for one in its way, a special workspace's window over
   it included.
+- Moving between bar widgets no longer shows the previous popup's content over the next one:
+  the leaving content fades out underneath, and the arriving content fades in after it.
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
   and fills in afterwards; its content is revealed by the plate as it grows.

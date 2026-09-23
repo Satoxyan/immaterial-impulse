@@ -248,6 +248,11 @@ Scope {
                     leaving.parent = contentHost;
                     leaving.anchors.top = contentHost.top;
                     leaving.anchors.left = contentHost.left;
+                    // UNDER the arriving tree: reparented last it stacked on
+                    // top, and for the first frames of a takeover the leaving
+                    // popup drew at full strength over the one the pointer
+                    // had moved to (footage: weather over calendar).
+                    leaving.z = -1;
                     contentExit.target = leaving;
                     contentExit.restart();
                 }
@@ -515,6 +520,7 @@ Scope {
                     content.anchors.centerIn = null;
                     content.anchors.top = undefined;
                     content.anchors.left = undefined;
+                    content.z = 0;
                     content.parent = null;
                     content.opacity = 1;
                     content.enabled = true;
@@ -886,11 +892,12 @@ Scope {
             SequentialAnimation {
                 id: contentEnter
                 property Item item: null
-                // The pause is the slice of the travel the outgoing content's
-                // fade owns; the enter then lands exactly as the move settles.
+                // The pause is the outgoing content's whole fade: the arriving
+                // tree starts once the leaving one is gone, so the two are
+                // never both legible (a shorter pause had them overlapping,
+                // footage). The card's move keeps its own tier underneath.
                 PauseAnimation {
-                    duration: Appearance.animation.elementMove.duration
-                        - Appearance.animation.elementMoveEnter.duration
+                    duration: Appearance.animation.elementMoveExit.duration
                 }
                 NumberAnimation {
                     target: contentEnter.item

@@ -431,3 +431,11 @@ translucent against the band, it is the band.
   windows move without a Hyprland event, so while one is on an active workspace, or a special
   workspace is shown, the clients are re-read once a second (HyprlandData.floatingOnActive);
   none up, the clock is off.
+- **Both contents at once on a takeover** (footage, 2026-09-23, 60 fps frames): moving from the
+  weather widget to the calendar, the weather drew at full strength over the arriving calendar
+  for four frames, both texts legible. Two causes: the leaving tree was reparented into the host
+  after the arriving one and so stacked above it; and the arriving fade started 100 ms in (the
+  spatial tier less the enter tier), while the leaving fade had 200 ms to run. Now the leaving
+  tree goes under (`z: -1`, reset on release) and the arriving fade waits the leaving fade's
+  whole length, so the two are never both legible; the card's move keeps its own tier under
+  both.
