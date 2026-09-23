@@ -4,6 +4,7 @@ import qs.modules.common.widgets
 import qs.services
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import "../../../services/frame_geometry.js" as Geo
@@ -40,6 +41,20 @@ import "../../../services/frame_geometry.js" as Geo
  */
 Scope {
     id: frame
+    // The join records, for a terminal: `qs -c imi ipc call frame joins
+    // <screen>`. Read-only, and the same map the surfaces paint from - the
+    // way to see what a surface published while a motion is on screen, on
+    // the machine it is on screen on (the sandbox is not NVIDIA).
+    IpcHandler {
+        target: "frame"
+        function joins(screen: string): string { return JSON.stringify(GlobalStates.frameJoins[screen] ?? null); }
+        function geometry(): string {
+            return JSON.stringify({ enabled: FrameGeometry.enabled, barEdge: FrameGeometry.barEdge, barCovers: FrameGeometry.barCovers,
+                barIslands: FrameGeometry.barIslands, popupsJoinBar: FrameGeometry.popupsJoinBar, paintsBarPlate: FrameGeometry.paintsBarPlate,
+                barLook: FrameGeometry.barLook, dockLook: FrameGeometry.dockLook, osdLook: FrameGeometry.osdLook, thickness: FrameGeometry.thickness,
+                barThickness: FrameGeometry.barThickness, gap: FrameGeometry.gap, insets: FrameGeometry.insets });
+        }
+    }
 
     // One band. A Rectangle on the surface: the two horizontal bands span the
     // width, the two side bands run between them, so no two overlap - the
