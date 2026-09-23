@@ -296,6 +296,14 @@ Scope {
                     else osdRoot.landing = true;
                 }
             }
+            // Released when the growth ARRIVES, not when its animation ends:
+            // the spatial tier's curve has the pill at full size a third of
+            // the way in and spends the rest settling, and a release on the
+            // animation's end put a 280 ms pause between the growth and the
+            // lift (footage, 30 fps frames). The end stays as the fallback.
+            onOpenProgressChanged: {
+                if (GlobalStates.osdVolumeOpen && !osdRoot.openDone && osdRoot.openProgress >= 0.97) osdRoot.openDone = true;
+            }
             Connections {
                 target: osdRoot.openAnim
                 function onRunningChanged() {

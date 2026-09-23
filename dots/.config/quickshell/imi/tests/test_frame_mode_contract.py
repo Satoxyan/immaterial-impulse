@@ -627,6 +627,10 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("readonly property bool willOutgrow: (root.vertical ? popupBackground.implicitHeight : popupBackground.implicitWidth) > previewPopup.pillFlat", drag, "decided from the settled width, so it lifts from the first frame")
         self.assertIn("readonly property bool fusedNow: previewPopup.show ? !(previewPopup.willOutgrow || previewPopup.openDone) : !previewPopup.outgrows", drag)
         self.assertRegex(drag, r"if \(!previewPopup\.openAnim\.running && previewPopup\.show && previewPopup\.openProgress >= 0\.999\)\s*previewPopup\.openDone = true;")
+        # ...and released when the growth arrives, not when the tier's
+        # animation ends (a 280 ms pause between growth and lift, footage).
+        self.assertIn("if (previewPopup.show && !previewPopup.openDone && previewPopup.openProgress >= 0.97) previewPopup.openDone = true;", drag)
+        self.assertIn("if (GlobalStates.osdVolumeOpen && !osdRoot.openDone && osdRoot.openProgress >= 0.97) osdRoot.openDone = true;", _strip((ROOT / "modules/imi/onScreenDisplay/OnScreenDisplay.qml").read_text()))
         self.assertIn("if (previewPopup.willOutgrow || previewJoin.lift <= 0.5) {\n                previewPopup.submerge();", drag)
         self.assertIn("const necked = previewPopup.willOutgrow ? 0 : grown;", drag, "no meniscus under a card that was never fused")
         self.assertIn("neck: previewJoin.state.neck * necked, bulge: previewJoin.state.bulge * necked,", drag)

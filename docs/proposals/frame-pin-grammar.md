@@ -410,3 +410,9 @@ translucent against the band, it is the band.
   (`windowUp`), never a binding on the trigger: bound, the Loader re-evaluated on the very
   signal that was to set `leaving` inside the window and destroyed it first - the pill vanished
   in one frame instead of sinking (burst).
+- **The pause before the lift** (footage, 2026-09-23, 30 fps frames): the OSD grew in about
+  170 ms, sat fully grown for 280 ms, then lifted. The release waited for the growth's
+  animation to END, and the spatial tier's curve has the pill at full size a third of the way in
+  and spends the rest settling. The OSD and the dock preview now release when the growth
+  ARRIVES - `openProgress` first crossing 0.97 - with the animation's end kept as the fallback;
+  the lift starts while the growth settles its last pixels, one motion.

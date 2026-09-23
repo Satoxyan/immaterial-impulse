@@ -527,6 +527,12 @@ Item {
             previewPopup.openDone = previewPopup.openProgress >= 0.999 && popupBackground.height > 0;
             previewPopup.openProgress = 1;
         }
+        // Released when the growth ARRIVES, not when its animation ends (the
+        // OSD says why: a 280 ms pause between the growth and the lift
+        // otherwise). The end stays as the fallback.
+        onOpenProgressChanged: {
+            if (previewPopup.show && !previewPopup.openDone && previewPopup.openProgress >= 0.97) previewPopup.openDone = true;
+        }
         Connections {
             target: previewPopup.openAnim
             function onRunningChanged() {
