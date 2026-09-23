@@ -73,11 +73,13 @@ Singleton {
     // bar's strip - its zone and the gap. A floating window elsewhere on the
     // screen does not turn the bar (review: "a floating window should not
     // toggle the attached state unless it came within their spaces").
+    // The strip: the bar's zone, the lift it floats by, and the gap under it
+    // - a window whose edge touches the floating plate's gap is in its space.
+    readonly property real barStripDepth: root.barThickness + root.gap * 2
     readonly property var barOccupiedByMonitorName: {
         const out = ({});
-        const depth = root.barThickness + root.gap;
         for (const mon of HyprlandData.monitors)
-            out[mon.name] = Geo.barOccupied(HyprlandData.windowList, mon, root.barEdge, depth);
+            out[mon.name] = Geo.edgeOccupied(HyprlandData.windowList, mon, root.barEdge, root.barStripDepth);
         return out;
     }
     function barAttachedFor(pinned: bool, occupied: bool): bool {

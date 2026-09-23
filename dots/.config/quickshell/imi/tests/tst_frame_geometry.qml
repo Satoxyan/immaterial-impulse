@@ -124,18 +124,22 @@ TestCase {
         const mon = { id: 0, name: "DP-1", x: 0, y: 0, width: 2560, height: 1440, scale: 1, transform: 0, activeWorkspace: { id: 1 } };
         const ws = { id: 1 };
         const depth = 40 + 5;
-        verify(!Geo.barOccupied([], mon, "top", depth), "empty workspace floats");
-        verify(Geo.barOccupied([{ monitor: 0, workspace: ws, floating: false, at: [10, 100], size: [800, 600] }], mon, "top", depth), "a tiled window hugs");
-        verify(!Geo.barOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 400], size: [800, 600] }], mon, "top", depth), "a floating window in the middle leaves the bar");
-        verify(Geo.barOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 30], size: [800, 600] }], mon, "top", depth), "a floating window into the top strip hugs");
-        verify(!Geo.barOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 30], size: [800, 600] }], mon, "bottom", depth), "...but not a bottom bar");
-        verify(Geo.barOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 1300], size: [800, 200] }], mon, "bottom", depth), "a floating window into the bottom strip hugs a bottom bar");
-        verify(!Geo.barOccupied([{ monitor: 0, workspace: { id: 2 }, floating: false, at: [10, 100], size: [800, 600] }], mon, "top", depth), "another workspace does not count");
-        verify(!Geo.barOccupied([{ monitor: 1, workspace: ws, floating: false, at: [10, 100], size: [800, 600] }], mon, "top", depth), "another monitor does not count");
+        verify(!Geo.edgeOccupied([], mon, "top", depth), "empty workspace floats");
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: false, at: [10, 100], size: [800, 600] }], mon, "top", depth), "a tiled window hugs");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 400], size: [800, 600] }], mon, "top", depth), "a floating window in the middle leaves the bar");
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 30], size: [800, 600] }], mon, "top", depth), "a floating window into the top strip hugs");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 30], size: [800, 600] }], mon, "bottom", depth), "...but not a bottom bar");
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, 1300], size: [800, 200] }], mon, "bottom", depth), "a floating window into the bottom strip hugs a bottom bar");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: { id: 2 }, floating: false, at: [10, 100], size: [800, 600] }], mon, "top", depth), "another workspace does not count");
+        verify(!Geo.edgeOccupied([{ monitor: 1, workspace: ws, floating: false, at: [10, 100], size: [800, 600] }], mon, "top", depth), "another monitor does not count");
         // A scaled, rotated monitor: the strip is measured in logical pixels.
         const hidpi = { id: 0, name: "eDP-1", x: 0, y: 0, width: 2880, height: 1800, scale: 2, transform: 0, activeWorkspace: { id: 1 } };
-        verify(Geo.barOccupied([{ monitor: 0, workspace: ws, floating: true, at: [100, 880], size: [400, 100] }], hidpi, "bottom", depth), "logical height 900: a window down to 980 is in the bottom strip");
-        verify(!Geo.barOccupied([{ monitor: 0, workspace: ws, floating: true, at: [100, 500], size: [400, 100] }], hidpi, "bottom", depth), "one ending at 600 is not");
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [100, 880], size: [400, 100] }], hidpi, "bottom", depth), "logical height 900: a window down to 980 is in the bottom strip");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [100, 500], size: [400, 100] }], hidpi, "bottom", depth), "one ending at 600 is not");
+        // Touching counts, and the side edges have strips too (the dock).
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [600, depth], size: [800, 600] }], mon, "top", depth), "a window whose top edge touches the strip's bottom is in it");
+        verify(Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [2500, 300], size: [400, 300] }], mon, "right", 70), "a floating window into the right strip");
+        verify(!Geo.edgeOccupied([{ monitor: 0, workspace: ws, floating: true, at: [1000, 300], size: [400, 300] }], mon, "left", 70), "...and not one far from the left");
     }
 
     function test_join_records_are_a_map_per_screen_that_never_mutates() {

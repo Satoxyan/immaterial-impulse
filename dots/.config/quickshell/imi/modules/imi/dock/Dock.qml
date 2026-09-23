@@ -12,6 +12,7 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import "dock_geometry.js" as DockGeometry
+import "../../../services/frame_geometry.js" as Geo
 
 Scope {
     id: root
@@ -66,12 +67,20 @@ Scope {
                     return true
                 if (fullscreenOnThisMonitor)
                     return Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse
+                // Hidden for a focused window only when that window is in
+                // the dock's way: a tiled one, or a floating one within the
+                // dock's strip (Geo.edgeOccupied). A floating window focused
+                // far from the dock used to hide it (review).
                 return root.pinned
                     || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse)
                     || activeAppsArea.requestDockShow
                     || dragSlots.requestDockShow
-                    || (!ToplevelManager.activeToplevel?.activated)
+                    || !(ToplevelManager.activeToplevel?.activated && dockRoot.dockOccupied)
             }
+            // The dock's strip: its thickness, its lift and the gap.
+            readonly property bool dockOccupied: Geo.edgeOccupied(HyprlandData.windowList,
+                HyprlandData.monitors.find(m => m.name === (dockRoot.modelData?.name ?? "")) ?? null,
+                root.edge, dockRoot.dockThickness + Appearance.sizes.hyprlandGapsOut * 2)
 
             // Everything positional comes from one derivation
             // (dock_geometry.js), so the four places that used to spell the

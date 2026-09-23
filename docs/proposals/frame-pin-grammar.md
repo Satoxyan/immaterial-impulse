@@ -419,7 +419,12 @@ translucent against the band, it is the band.
 - **A floating window does not turn the bar** (review, 2026-09-23): Auto hugged for any window
   on the active workspace, floating ones included, so a calculator in the middle of the screen
   turned the frame's border on. The bar hugs for a tiled window, or a floating one within its
-  strip - its zone and the gap along its edge (`Geo.barOccupied`, mapped per monitor by
+  strip - its zone, the lift it floats by and the gap under it, touching counts, since a
+  Settings window whose top sat two pixels under the floating plate read as overlapping and
+  did not turn it (screenshot) - `Geo.edgeOccupied`, mapped per monitor by
   `FrameGeometry.barOccupiedByMonitorName`; the strip is measured in logical pixels under the
-  monitor's scale and transform). The dock's Auto follows its pin, not the windows, so it has
-  nothing to turn.
+  monitor's scale and transform. The dock's Auto follows its pin, but an UNPINNED dock hid for
+  any focused window; it hides for a focused window only when that window is in its way, by
+  the same rule on its own edge (a tiled one, or a floating one within the dock's strip).
+  Floating windows move without a Hyprland event, so while one is on an active workspace the
+  clients are re-read once a second (HyprlandData.floatingOnActive); none up, the clock is off.

@@ -529,9 +529,19 @@ class FrameModeContract(unittest.TestCase):
         # (the zone and the gap); a floating window elsewhere leaves it
         # (review). The rule is Geo.barOccupied, mapped per monitor by the
         # frame authority; the old any-window map is gone.
-        self.assertIn("function barOccupied(windows, monitor, edge, depth) {", (ROOT / "services/frame_geometry.js").read_text())
+        self.assertIn("function edgeOccupied(windows, monitor, edge, depth) {", (ROOT / "services/frame_geometry.js").read_text())
         self.assertIn("readonly property var barOccupiedByMonitorName:", geometry_src := _strip((ROOT / "services/FrameGeometry.qml").read_text()))
-        self.assertIn("out[mon.name] = Geo.barOccupied(HyprlandData.windowList, mon, root.barEdge, depth);", geometry_src)
+        self.assertIn("readonly property real barStripDepth: root.barThickness + root.gap * 2", geometry_src, "the zone, the lift and the gap: a window touching the floating plate's gap is in its space")
+        self.assertIn("out[mon.name] = Geo.edgeOccupied(HyprlandData.windowList, mon, root.barEdge, root.barStripDepth);", geometry_src)
+        # The dock hides for a focused window only when it is in the dock's
+        # way, by the same rule; and floating windows move without an event,
+        # so the clients are re-read on a slow clock while one is up.
+        dock_src = _strip((ROOT / "modules/imi/dock/Dock.qml").read_text())
+        self.assertIn("|| !(ToplevelManager.activeToplevel?.activated && dockRoot.dockOccupied)", dock_src)
+        self.assertIn("readonly property bool dockOccupied: Geo.edgeOccupied(HyprlandData.windowList,", dock_src)
+        hypr = _strip((ROOT / "services/HyprlandData.qml").read_text())
+        self.assertIn("readonly property bool floatingOnActive: root.monitors.some(mon =>", hypr)
+        self.assertIn("running: root.floatingOnActive", hypr)
         self.assertIn('readonly property bool barOccupied: FrameGeometry.barOccupiedByMonitorName[barRoot.screen?.name ?? ""] ?? false', barWindow)
         self.assertNotIn("occupiedByMonitorName", _strip((ROOT / "services/HyprlandData.qml").read_text()))
         states = _strip((ROOT / "GlobalStates.qml").read_text())

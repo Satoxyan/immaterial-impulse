@@ -137,6 +137,20 @@ Singleton {
         onTriggered: root.updateAll()
     }
 
+    // Whether a floating window is on any monitor's active workspace. A
+    // floating window MOVES without a Hyprland event (the bar hugs for one
+    // in its strip, the dock hides for one - frame_geometry.js
+    // edgeOccupied), so while one is up the clients are re-read on a slow
+    // clock; none up, the clock is off.
+    readonly property bool floatingOnActive: root.monitors.some(mon =>
+        root.windowList.some(w => w.floating && w.monitor === mon.id && w.workspace?.id === mon.activeWorkspace?.id))
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.floatingOnActive
+        onTriggered: root.updateWindowList()
+    }
+
     Connections {
         target: Hyprland
 

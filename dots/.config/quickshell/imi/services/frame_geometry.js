@@ -107,15 +107,16 @@ function joinBandEdge(edge, extent, width, height) {
     return (Number(width) || 0) - e;
 }
 
-// Whether the bar on `edge` has a window to hug for (frame-pin-grammar.md,
-// the bar row): a window on the monitor's active workspace - unless it
-// FLOATS clear of the bar's space, the strip `depth` deep along the bar's
-// edge (its zone and the gap). A floating window in the middle of the screen
-// leaves the frame's border alone; one dragged into the bar's strip is in its
-// way, and the bar hugs. `windows` and `monitor` are hyprctl's JSON: a
+// Whether a window is in the way of the shell's element on `edge` - the bar
+// (frame-pin-grammar.md, the bar row: it hugs for one) or the dock (it hides
+// for one): a window on the monitor's active workspace, unless it FLOATS
+// clear of the element's strip, `depth` deep along that edge (the element's
+// zone, its lift and the gap). A floating window in the middle of the screen
+// leaves the bar's border and the dock alone; one dragged into the strip is
+// in the way, touching counts. `windows` and `monitor` are hyprctl's JSON: a
 // client's `at`/`size` are logical, a monitor's `width`/`height` physical
 // under its `scale`, swapped by an odd `transform`.
-function barOccupied(windows, monitor, edge, depth) {
+function edgeOccupied(windows, monitor, edge, depth) {
     if (!monitor) return false;
     var scale = Number(monitor.scale) || 1;
     var rotated = (Number(monitor.transform) || 0) % 2 === 1;
@@ -123,7 +124,10 @@ function barOccupied(windows, monitor, edge, depth) {
     var lh = (Number(rotated ? monitor.width : monitor.height) || 0) / scale;
     var d = Math.max(0, Number(depth) || 0);
     var mx = Number(monitor.x) || 0, my = Number(monitor.y) || 0;
-    var strip = edge === "bottom" ? { x: mx, y: my + lh - d, w: lw, h: d } : { x: mx, y: my, w: lw, h: d };
+    var strip = edge === "bottom" ? { x: mx, y: my + lh - d, w: lw, h: d }
+        : edge === "top" ? { x: mx, y: my, w: lw, h: d }
+        : edge === "left" ? { x: mx, y: my, w: d, h: lh }
+        : { x: mx + lw - d, y: my, w: d, h: lh };
     var ws = monitor.activeWorkspace ? monitor.activeWorkspace.id : undefined;
     var list = windows || [];
     for (var i = 0; i < list.length; i++) {
@@ -131,8 +135,8 @@ function barOccupied(windows, monitor, edge, depth) {
         if (!w || w.monitor !== monitor.id || !w.workspace || w.workspace.id !== ws) continue;
         if (!w.floating) return true;
         var at = w.at || [0, 0], size = w.size || [0, 0];
-        if (at[0] < strip.x + strip.w && at[0] + size[0] > strip.x
-            && at[1] < strip.y + strip.h && at[1] + size[1] > strip.y) return true;
+        if (at[0] <= strip.x + strip.w && at[0] + size[0] >= strip.x
+            && at[1] <= strip.y + strip.h && at[1] + size[1] >= strip.y) return true;
     }
     return false;
 }
