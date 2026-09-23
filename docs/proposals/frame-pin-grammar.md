@@ -451,3 +451,12 @@ translucent against the band, it is the band.
   content back whole. The dock's window preview and the OSD sink the same way. The entrance
   keeps its reveal: a growing plate uncovering content is the unroll, a shrinking one cutting it
   is a crop.
+- **A segfault at the end of an exit** (crash report, 2026-09-23 11:25, the Discord popup): the
+  overlay's `release()` calls the popup's `aboutToRelease()` before it reparents the content
+  (a tray menu once segfaulted the other way round), and the click-only plugins unload their
+  popup the moment `held` drops - so the popup and its content were destroyed inside
+  `release()`, which then wrote to them. The log's last lines were the plugin Loader's binding
+  loop (its `active` read the item's own `held` and re-evaluated while its write was unloading
+  the item) and the popup layer closing. The hold is let go from the event loop now
+  (`Qt.callLater`), after `release()` has finished with the popup, and the plugin Loaders keep a
+  plain `cardHeld` flag fed by a Connections on the item rather than a binding on it.

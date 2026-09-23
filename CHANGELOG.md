@@ -47,6 +47,8 @@ own repo; the installer pins which revision it builds.
 - A bar popup, the dock's window preview and the OSD take their content down with them as they
   sink back into the frame - scaled and fading with the plate - instead of cropping it as they
   shrink.
+- Closing a Docker or Discord bar popup could crash the shell at the end of its exit; it no
+  longer does.
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
   and fills in afterwards; its content is revealed by the plate as it grows.

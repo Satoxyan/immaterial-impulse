@@ -504,7 +504,11 @@ class FrameModeContract(unittest.TestCase):
         self.assertIn("if (GlobalStates.claimBarPopup(root)) root.held = true;", _strip((ROOT / "modules/common/widgets/StyledPopup.qml").read_text()))
         for plugin in ("modules/imi/bar/DiscordVoicePlugin.qml", "modules/imi/bar/DockerPlugin.qml", "modules/common/plugins/bundled/docker/DockerWidget.qml"):
             src = _strip((ROOT / plugin).read_text())
-            self.assertIn("active: root.popupOpen || (popupLoader.item?.held ?? false)", src, plugin)
+            # A plain flag, not a binding on the item's own `held`: that binding
+            # re-evaluated while its write was unloading the item (a loop), and
+            # the popup was destroyed under the overlay's hand (crash report).
+            self.assertIn("active: root.popupOpen || popupLoader.cardHeld", src, plugin)
+            self.assertIn("function onHeldChanged() { popupLoader.cardHeld = popupLoader.item?.held ?? false; }", src, plugin)
             self.assertNotIn("pinnedOpen: true", src, plugin + ": the popup asks to close; the plugin keeps it loaded")
         # A fused card sits on the flat stretch of its plate, between the
         # corner radii, and carries no neck where it overhangs a narrower
