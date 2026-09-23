@@ -523,6 +523,7 @@ Item {
         }
         function emerge() {
             previewPopup.landing = false;
+            previewPopup.sinking = false;
             sinkFade.stop();
             previewRowLayout.opacity = 1;
             // Already up (a re-hover that reversed a landing): lift again.
@@ -550,14 +551,20 @@ Item {
             }
             previewPopup.landing = true;
         }
-        // The content fades out whole first, at the size it has, and then
-        // the card sinks: sunk with its thumbnails still up, the collapsing
-        // card cropped them as it went (the bar popup's lesson).
+        // The sink: the thumbnails go with the card - scaled down with it
+        // about the pill's side and fading as they go (the bar popup's
+        // lesson: a clip over a shrinking card cut them, a fade held first
+        // stalled the close).
+        property bool sinking: false
+        property real sinkFromW: 0
+        property real sinkFromH: 0
         function submerge() {
             previewPopup.landing = false;
-            if (previewRowLayout.opacity > 0.01 && !previewPopup.show) {
-                if (!sinkFade.running) sinkFade.restart();
-                return;
+            if (!previewPopup.sinking) {
+                previewPopup.sinkFromW = popupBackground.width;
+                previewPopup.sinkFromH = popupBackground.height;
+                previewPopup.sinking = true;
+                sinkFade.restart();
             }
             previewPopup.openProgress = 0;
         }
@@ -569,7 +576,6 @@ Item {
             duration: Appearance.animation.elementMoveExit.duration
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
-            onFinished: if (!previewPopup.show) previewPopup.openProgress = 0
         }
         // Landed when the gap is closed and the neck whole, not when the
         // spring has stopped ringing (BarPopupOverlay says why).
@@ -794,7 +800,7 @@ Item {
                     enabled: !root.previewJoinsFrame
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
-                clip: true
+                clip: !previewPopup.sinking
                 // Stood down while the frame paints the plate; the content stays.
                 readonly property bool plateOnFrame: root.previewJoinsFrame && previewJoin.drawsPlate
                 color: plateOnFrame ? "transparent" : Appearance.m3colors.m3surfaceContainer
@@ -842,6 +848,13 @@ Item {
                     y: root.vertical
                         ? (parent.height - height) / 2
                         : (popupMouseArea.dockSide === "bottom" ? parent.height - popupBackground.padding - height : popupBackground.padding)
+                    // Scaled down with the sinking card, about the pill's side.
+                    transform: Scale {
+                        origin.x: root.vertical ? (popupMouseArea.dockSide === "left" ? 0 : previewRowLayout.width) : previewRowLayout.width / 2
+                        origin.y: root.vertical ? previewRowLayout.height / 2 : (popupMouseArea.dockSide === "bottom" ? previewRowLayout.height : 0)
+                        xScale: previewPopup.sinking && previewPopup.sinkFromW > 0 ? popupBackground.width / previewPopup.sinkFromW : 1
+                        yScale: previewPopup.sinking && previewPopup.sinkFromH > 0 ? popupBackground.height / previewPopup.sinkFromH : 1
+                    }
 
                     Repeater {
                         model: ScriptModel {

@@ -287,6 +287,7 @@ Scope {
                     if (!root.joinsFrame) return;
                     if (GlobalStates.osdVolumeOpen) {
                         osdRoot.landing = false;
+                        osdRoot.sinking = false;
                         sinkFade.stop();
                         contentColumnLayout.opacity = 1;
                         osdRoot.openDone = osdRoot.openProgress >= 0.999 && osdValuesWrapper.height > 0;
@@ -328,14 +329,20 @@ Scope {
                     if (!osdJoin.moving && osdRoot.landing) { osdRoot.landing = false; osdRoot.sink(); }
                 }
             }
-            // The content fades out whole first, at the size it has, and
-            // then the pill sinks: sunk with its content up, the collapsing
-            // pill cropped it as it went (the bar popup's lesson).
+            // The sink: the indicator goes with the pill - scaled down with
+            // it about the plate's side and fading as it goes (the bar
+            // popup's lesson: a clip over a shrinking pill cut it, a fade
+            // held first stalled the close).
+            property bool sinking: false
+            property real sinkFromW: 0
+            property real sinkFromH: 0
             function sink() {
                 if (GlobalStates.osdVolumeOpen) return;
-                if (contentColumnLayout.opacity > 0.01) {
-                    if (!sinkFade.running) sinkFade.restart();
-                    return;
+                if (!osdRoot.sinking) {
+                    osdRoot.sinkFromW = osdValuesWrapper.width;
+                    osdRoot.sinkFromH = osdValuesWrapper.height;
+                    osdRoot.sinking = true;
+                    sinkFade.restart();
                 }
                 osdRoot.openProgress = 0;
             }
@@ -347,7 +354,6 @@ Scope {
                 duration: Appearance.animation.elementMoveExit.duration
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
-                onFinished: if (!GlobalStates.osdVolumeOpen) osdRoot.openProgress = 0
             }
             Component.onCompleted: {
                 osdRoot.takeBarInner();
@@ -465,7 +471,7 @@ Scope {
                     implicitWidth: root.joinsFrame
                         ? Math.min(pillWidth, parkedSize) + (pillWidth - Math.min(pillWidth, parkedSize)) * grow
                         : contentColumnLayout.implicitWidth
-                    clip: true
+                    clip: !osdRoot.sinking
 
                     MouseArea {
                         anchors.fill: parent
@@ -485,6 +491,13 @@ Scope {
                             ? (osdRoot.bottom ? parent.height - implicitHeight + Appearance.sizes.elevationMargin : -Appearance.sizes.elevationMargin)
                             : 0
                         spacing: 0
+                        // Scaled down with the sinking pill, about the plate's side.
+                        transform: Scale {
+                            origin.x: contentColumnLayout.width / 2
+                            origin.y: osdRoot.bottom ? contentColumnLayout.implicitHeight : 0
+                            xScale: osdRoot.sinking && osdRoot.sinkFromW > 0 ? osdValuesWrapper.width / osdRoot.sinkFromW : 1
+                            yScale: osdRoot.sinking && osdRoot.sinkFromH > 0 ? osdValuesWrapper.height / osdRoot.sinkFromH : 1
+                        }
 
                         Loader {
                             id: osdIndicatorLoader

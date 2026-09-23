@@ -44,8 +44,9 @@ own repo; the installer pins which revision it builds.
 - Moving between bar widgets no longer shows the previous popup's content over the next one:
   the leaving content fades out underneath, without the first-frame jump it had when the
   next popup's padding differed, and the arriving content fades in after it.
-- A bar popup, the dock's window preview and the OSD fade their content out before they sink
-  back into the frame, instead of cropping it as they shrink.
+- A bar popup, the dock's window preview and the OSD take their content down with them as they
+  sink back into the frame - scaled and fading with the plate - instead of cropping it as they
+  shrink.
 - The dock's window preview no longer closes and reopens on the way from one icon to the next.
 - Frame mode: a bar widget's popup opened by hover no longer grows out of the band empty
   and fills in afterwards; its content is revealed by the plate as it grows.
