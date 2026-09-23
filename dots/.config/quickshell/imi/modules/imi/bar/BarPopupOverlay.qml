@@ -273,7 +273,7 @@ Scope {
                     arriving.anchors.centerIn = contentSlot;
                     arriving.enabled = true;
                     contentEnter.stop();
-                    if (fresh && overlayWindow.cardFused) {
+                    if (fresh && overlayWindow.unrolls) {
                         // A fused card grows out of the band from nothing, and
                         // the frame paints its plate at full strength from the
                         // first row - a fused plate cannot fade, that would be
@@ -298,7 +298,7 @@ Scope {
                 popup.popupHovered = cardHover.hovered;
 
                 if (fresh) {
-                    overlayWindow.emerging = overlayWindow.joinsFrame;
+                    overlayWindow.emerging = overlayWindow.joinsFrame && !FrameGeometry.barPlateless;
                     overlayWindow.park();
                     // A fresh open arms the wave: the sections below the fold
                     // are put away before the card is on screen, and the gate
@@ -448,7 +448,7 @@ Scope {
                 // turns the join attached; the collapse waits for it to
                 // settle, else the card shrank while still coming down and
                 // read as vanishing without ever fusing back (footage).
-                if (overlayWindow.joinsFrame && cardJoin.lift > 0.5) {
+                if (overlayWindow.joinsFrame && !FrameGeometry.barPlateless && cardJoin.lift > 0.5) {
                     overlayWindow.landing = true;
                     return;
                 }
@@ -862,8 +862,23 @@ Scope {
             // when the growth arrives - one motion, the frame's own, where a
             // released card used to unroll from its parked square as before.
             property bool emerging: false
-            readonly property bool joinAttached: !overlayWindow.joinsFrame || overlayWindow.wantsFused || overlayWindow.exiting || overlayWindow.emerging
+            readonly property bool joinAttached: !overlayWindow.joinsFrame || overlayWindow.wantsFused
+                || (overlayWindow.exiting && !FrameGeometry.barPlateless) || overlayWindow.emerging
+            // A bar with no plate: the card is released from its first frame
+            // and the lift RIDES the growth (the OSD's rule, liftRide there) -
+            // no emergence phase, no landing; the one scalar grows the card
+            // out of the bar's edge to its gap and sinks it back.
+            readonly property real liftRide: FrameGeometry.barPlateless ? Math.max(0, Math.min(1, card.openProgress)) : 1
             readonly property bool cardFused: overlayWindow.joinsFrame && overlayWindow.joinAttached
+            // Whether the card grows out of the bar from NOTHING and sinks
+            // back to nothing, its content revealed by the growth (the
+            // unroll): a fused card, and a released one on a bar with no plate
+            // - it rides the same scalar out of the same edge. Every other
+            // released card grows from the parked square and fades its
+            // content in; on a plateless bar that left a parked-square dot
+            // on the bar edge for the exit timer's length after the card had
+            // gone, and an empty card for the content fade's first 200 ms.
+            readonly property bool unrolls: overlayWindow.cardFused || (overlayWindow.joinsFrame && FrameGeometry.barPlateless)
             FrameJoin {
                 id: cardJoin
                 anchors.fill: parent
@@ -906,7 +921,7 @@ Scope {
                              topRight: bottom ? card.radius : heldR,
                              bottomRight: bottom ? heldR : card.radius,
                              bottomLeft: bottom ? heldL : card.radius },
-                    gap: cardJoin.state.gap,
+                    gap: cardJoin.state.gap * overlayWindow.liftRide,
                     // No meniscus where there is nothing to fuse to: a card
                     // wider than its island, or a bar with no plate.
                     neck: overlayWindow.cardOverhangs || FrameGeometry.barPlateless ? 0 : cardJoin.state.neck * grown,
@@ -914,7 +929,7 @@ Scope {
                     meniscus: cardJoin.meniscus, blendPerPixel: cardJoin.blendPerPixel,
                     climbFraction: cardJoin.climbFraction, color: overlayWindow.platePaint,
                     // The released card's border, fading in with the lift.
-                    strokeWidth: Appearance.borderWidth.standard * Math.min(1, cardJoin.lift / Math.max(1, cardJoin.travel)),
+                    strokeWidth: Appearance.borderWidth.standard * Math.min(1, cardJoin.lift * overlayWindow.liftRide / Math.max(1, cardJoin.travel)),
                     strokeColor: Appearance.colors.colLayer0Border
                 };
             }
@@ -1011,7 +1026,7 @@ Scope {
 
                 width: 0
                 height: BarPopupUnroll.cardHeight(card.openHeight, card.heroHeight,
-                    card.parkedSize, overlayWindow.exiting, card.openProgress, overlayWindow.cardFused)
+                    card.parkedSize, overlayWindow.exiting, card.openProgress, overlayWindow.unrolls)
                 // Bindings, not assignments, and that is what the driver bought.
                 // On the bottom and right edges the bar-adjacent coordinate is a
                 // function of the animating size, which is why this used to be
@@ -1027,7 +1042,7 @@ Scope {
                     : card.alongBar
                 // The gap off the bar: the elevation margin, or - where the
                 // frame joins the card - the join's lift, nothing while fused.
-                readonly property real offBar: overlayWindow.joinsFrame ? cardJoin.lift : Appearance.sizes.elevationMargin
+                readonly property real offBar: overlayWindow.joinsFrame ? cardJoin.lift * overlayWindow.liftRide : Appearance.sizes.elevationMargin
                 y: overlayWindow.barVertical
                     ? card.alongBar
                     : (overlayWindow.barEdge === "bottom"

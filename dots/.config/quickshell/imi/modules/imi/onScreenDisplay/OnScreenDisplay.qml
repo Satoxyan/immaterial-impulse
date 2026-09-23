@@ -284,7 +284,16 @@ Scope {
             readonly property bool willOutgrow: osdValuesWrapper.pillWidth > osdRoot.barFlat
             readonly property bool outgrows: osdValuesWrapper.width > osdRoot.barFlat
             readonly property bool fusedNow: FrameGeometry.osdAttached ? true
+                : FrameGeometry.barPlateless ? false
                 : (GlobalStates.osdVolumeOpen ? !(osdRoot.willOutgrow || osdRoot.openDone) : !osdRoot.outgrows)
+            // A bar with no plate: released from the first frame, and the lift
+            // RIDES the growth - the pill grows out of the bar's edge and
+            // settles its gap on the one scalar, and sinks back the same way.
+            // With the lift on the join's own spring the pill grew, then crept
+            // 10 px away over 400 ms, and crept back before it collapsed
+            // (footage, 60 fps): two motions in sequence, read as a drift.
+            // There is no neck here to make the second one a cleavage.
+            readonly property real liftRide: FrameGeometry.barPlateless ? osdValuesWrapper.grow : 1
             Connections {
                 target: GlobalStates
                 function onOsdVolumeOpenChanged() {
@@ -298,7 +307,7 @@ Scope {
                         return;
                     }
                     osdRoot.openDone = false;
-                    if (FrameGeometry.osdAttached || osdRoot.willOutgrow || osdJoin.lift <= 0.5) osdRoot.sink();
+                    if (FrameGeometry.osdAttached || FrameGeometry.barPlateless || osdRoot.willOutgrow || osdJoin.lift <= 0.5) osdRoot.sink();
                     else osdRoot.landing = true;
                 }
             }
@@ -392,11 +401,11 @@ Scope {
                     edge: osdRoot.edge,
                     plate: { x: at.x, y: at.y + oy + (osdRoot.bottom ? osdValuesWrapper.height - h : 0), width: osdValuesWrapper.width, height: h },
                     radii: { topLeft: r, topRight: r, bottomRight: r, bottomLeft: r },
-                    gap: osdJoin.state.gap, neck: osdJoin.state.neck * necked, bulge: osdJoin.state.bulge * necked,
+                    gap: osdJoin.state.gap * osdRoot.liftRide, neck: osdJoin.state.neck * necked, bulge: osdJoin.state.bulge * necked,
                     meniscus: osdJoin.meniscus, blendPerPixel: osdJoin.blendPerPixel,
                     climbFraction: osdJoin.climbFraction, color: osdRoot.platePaint,
                     // The released pill's border, fading in with the lift.
-                    strokeWidth: Appearance.borderWidth.standard * Math.min(1, osdJoin.lift / Math.max(1, osdJoin.travel)),
+                    strokeWidth: Appearance.borderWidth.standard * Math.min(1, osdJoin.lift * osdRoot.liftRide / Math.max(1, osdJoin.travel)),
                     strokeColor: Appearance.colors.colLayer0Border
                 };
             }
@@ -445,7 +454,7 @@ Scope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 // On the plate's edge less the join's lift, joined; where it
                 // always was otherwise.
-                y: !root.joinsFrame ? 0 : (osdRoot.bottom ? osdRoot.height - height - osdJoin.lift : osdJoin.lift)
+                y: !root.joinsFrame ? 0 : (osdRoot.bottom ? osdRoot.height - height - osdJoin.lift * osdRoot.liftRide : osdJoin.lift * osdRoot.liftRide)
 
                 Item {
                     id: osdValuesWrapper

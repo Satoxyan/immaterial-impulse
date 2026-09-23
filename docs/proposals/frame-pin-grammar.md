@@ -423,6 +423,20 @@ translucent against the band, it is the band.
   unrolling from its parked square - the same phases in every surface, whichever way it ends
   up. `qs -c imi ipc call frame geometry` and `frame joins <screen>` are the diagnosis that
   found it. Float keeps its own inset plate and stays out; M3 its own popups.
+- **The plateless drift** (footage, 2026-09-23 16:18, 60 fps): with the join's own spring
+  carrying the lift, the plateless OSD grew in 8 frames, then crept 10 px away over 24, and on
+  the timeout crept back over 15 before it collapsed in 6 - two motions in sequence each way,
+  read as a directional drift ("looks strange"). The spring's pace is the cleavage's: a stiff,
+  well-damped settle after the neck's cut, where the cut is the event and the travel an
+  aftermath. With no neck there is no event, so the travel stood alone. On a plateless bar the
+  card is released from its first frame and the lift RIDES the growth (`liftRide`: the OSD's
+  `grow`, the overlay's clamped `openProgress`) - the pill grows out of the bar's edge and
+  settles its gap on the one scalar, and sinks back the same way; no emergence phase, no
+  landing, the join never fused. The record's gap and stroke ride with it so the frame paints
+  where the card is. And a plateless card `unrolls` like a fused one: from nothing, its content
+  revealed by the growth, back to nothing - grown from the parked square it left a dot on the
+  bar edge for the exit timer's length after it had gone, and an empty card for the content
+  fade's first 200 ms.
 - **The pause before the lift** (footage, 2026-09-23, 30 fps frames): the OSD grew in about
   170 ms, sat fully grown for 280 ms, then lifted. The release waited for the growth's
   animation to END, and the spatial tier's curve has the pill at full size a third of the way in

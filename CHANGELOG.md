@@ -17,7 +17,10 @@ own repo; the installer pins which revision it builds.
   the OSD's frost and plate vanished in the first frame of its exit while its text lingered. They
   now join the bar's edge as their own cards, background or not: emerging from it, lifting off
   once grown, landing and sinking back into it. Frame widget popups that open as their own card
-  emerge the same way instead of unrolling from a parked square.
+  emerge the same way instead of unrolling from a parked square. On a bar with no plate the
+  gap is part of the growth itself - the card grows out of the bar's edge and settles its gap
+  in one motion, and sinks back the same way - instead of creeping away after it has grown and
+  creeping back before it collapses.
 - `qs -c imi ipc call frame geometry` and `frame joins <screen>` report the frame's geometry and
   a screen's live join records, for diagnosing a surface that will not join.
 
