@@ -11,6 +11,8 @@ own repo; the installer pins which revision it builds.
 
 ## [Unreleased]
 
+## [1.4.1] — 2026-09-23
+
 ### Fixed
 - Frame mode: a bar with its background off (Settings > Bar > Show background) left the bar's
   popups and the on-screen display out of the frame's motion - they popped in fully formed, and
